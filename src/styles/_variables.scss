@@ -1,0 +1,11 @@
+$breakpoint-sm: 40em;
+$breakpoint-md: 48em;
+$breakpoint-lg: 64em;
+$breakpoint-xl: 80em;
+
+$breakpoints: (
+  'sm': $breakpoint-sm,
+  'md': $breakpoint-md,
+  'lg': $breakpoint-lg,
+  'xl': $breakpoint-xl,
+);
