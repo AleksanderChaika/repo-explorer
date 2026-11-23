@@ -1,0 +1,16 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "rules": {
+    "custom-property-empty-line-before": null,
+    "scss/dollar-variable-empty-line-before": null,
+    "property-no-vendor-prefix": [
+      true,
+      { "ignoreProperties": ["-webkit-text-size-adjust"] }
+    ],
+    "selector-class-pattern": [
+      "^[a-z][a-zA-Z0-9]*$",
+      { "message": "Expected class selector to be camelCase" }
+    ],
+    "at-rule-disallowed-list": ["import"]
+  }
+}
