@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders the application heading', () => {
+  it('renders the home page heading', () => {
     render(<App />);
 
     expect(
-      screen.getByRole('heading', { name: 'repo-explorer' }),
+      screen.getByRole('heading', { name: 'Explore GitHub repositories' }),
     ).toBeInTheDocument();
   });
 });
