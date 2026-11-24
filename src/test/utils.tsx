@@ -17,15 +17,17 @@ function createTestQueryClient() {
 
 interface RenderWithProvidersOptions {
   route?: string;
+  initialEntries?: string[];
   gate?: RateLimitGate;
 }
 
 export function renderWithProviders({
   route = '/',
+  initialEntries = [route],
   gate = createRateLimitGate(),
 }: RenderWithProvidersOptions = {}) {
   const queryClient = createTestQueryClient();
-  const router = createMemoryRouter(routes, { initialEntries: [route] });
+  const router = createMemoryRouter(routes, { initialEntries });
 
   const view = render(
     <TestProviders queryClient={queryClient} gate={gate}>
