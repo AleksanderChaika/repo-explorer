@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { createQueryClient } from '@/api/queryClient';
+import RateLimitGateProvider from '@/features/search/RateLimitGateProvider';
 
 const queryClient = createQueryClient();
 
@@ -10,7 +11,9 @@ interface ProvidersProps {
 
 function Providers({ children }: ProvidersProps) {
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <RateLimitGateProvider>{children}</RateLimitGateProvider>
+    </QueryClientProvider>
   );
 }
 
