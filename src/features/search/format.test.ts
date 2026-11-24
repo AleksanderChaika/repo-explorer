@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCount, formatDate } from './format';
+import { formatCount, formatDate, formatRemaining, formatTime } from './format';
 
 describe('formatCount', () => {
   it('groups thousands with commas', () => {
@@ -34,5 +34,31 @@ describe('formatDate', () => {
 
   it('returns null for an empty string', () => {
     expect(formatDate('')).toBeNull();
+  });
+});
+
+describe('formatTime', () => {
+  it.each([
+    ['2026-01-15T14:05:00Z', '06:05'],
+    ['2026-01-15T08:05:00Z', '00:05'],
+    ['2026-01-15T20:09:00Z', '12:09'],
+    ['2026-01-15T07:30:00Z', '23:30'],
+    ['2026-07-15T14:05:00Z', '07:05'],
+  ])('formats %s as %s', (iso, expected) => {
+    expect(formatTime(new Date(iso))).toBe(expected);
+  });
+});
+
+describe('formatRemaining', () => {
+  it.each([
+    [0, '0:00'],
+    [-5000, '0:00'],
+    [1, '0:01'],
+    [59001, '1:00'],
+    [60000, '1:00'],
+    [65000, '1:05'],
+    [3600000, '60:00'],
+  ])('formats %s ms as %s', (ms, expected) => {
+    expect(formatRemaining(ms)).toBe(expected);
   });
 });
