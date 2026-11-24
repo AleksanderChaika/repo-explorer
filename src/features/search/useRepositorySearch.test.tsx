@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw/http';
 import { delay } from 'msw/utils/delay';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitError } from '@/api/errors';
-import type { Repository, SearchRepositoriesResponse } from '@/api/types';
+import { searchResponse } from '@/test/fixtures';
 import { server } from '@/test/server';
 import { renderHookWithProviders } from '@/test/utils';
 import type { SearchState } from './searchParams';
@@ -12,29 +12,6 @@ import type { RepositorySearch } from './useRepositorySearch';
 
 const ENDPOINT = 'https://api.github.com/search/repositories';
 const NOW = Date.UTC(2026, 10, 24, 10, 0, 0);
-
-function repository(name: string): Repository {
-  return {
-    id: name.length,
-    name,
-    full_name: `owner/${name}`,
-    owner: { login: 'owner', avatar_url: 'https://example.test/avatar.png' },
-    html_url: `https://github.com/owner/${name}`,
-    description: null,
-    stargazers_count: 1,
-    language: null,
-    forks_count: 0,
-    updated_at: '2026-01-01T00:00:00Z',
-  };
-}
-
-function searchResponse(...names: string[]): SearchRepositoriesResponse {
-  return {
-    total_count: names.length,
-    incomplete_results: false,
-    items: names.map(repository),
-  };
-}
 
 function searchState(overrides: Partial<SearchState> = {}): SearchState {
   return { q: 'react', sort: undefined, order: 'desc', page: 1, ...overrides };
