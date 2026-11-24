@@ -12,6 +12,10 @@ function parseSeconds(value: string | null): number | null {
   return Number(value);
 }
 
+function futureOrFallback(resetAtMs: number, now: number): Date {
+  return new Date(resetAtMs > now ? resetAtMs : now + FALLBACK_WAIT_MS);
+}
+
 export function parseRateLimit(
   response: Pick<Response, 'status' | 'headers'>,
   now: number = Date.now(),
@@ -26,14 +30,17 @@ export function parseRateLimit(
   const retryAfter = parseSeconds(headers.get('retry-after'));
 
   if (retryAfter !== null) {
-    return { resetAt: new Date(now + retryAfter * 1000), resource };
+    return {
+      resetAt: futureOrFallback(now + retryAfter * 1000, now),
+      resource,
+    };
   }
 
   if (headers.get('x-ratelimit-remaining') === '0') {
     const reset = parseSeconds(headers.get('x-ratelimit-reset'));
     const resetAt =
       reset !== null
-        ? new Date(reset * 1000)
+        ? futureOrFallback(reset * 1000, now)
         : new Date(now + FALLBACK_WAIT_MS);
     return { resetAt, resource };
   }
