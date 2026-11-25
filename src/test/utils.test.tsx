@@ -1,10 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { act } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { useLocation, useNavigate } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { createRateLimitGate } from '@/features/search/rateLimitGate';
 import { useRateLimitGate } from '@/features/search/rateLimitGateContext';
-import { renderHookWithProviders, renderHookWithRouter } from './utils';
+import {
+  renderHookWithProviders,
+  renderHookWithRouter,
+  setupFakeTimerUser,
+} from './utils';
 
 function useProviders() {
   return { queryClient: useQueryClient(), gate: useRateLimitGate() };
@@ -156,5 +160,30 @@ describe('renderHookWithRouter', () => {
     rerender({ value: 5 });
 
     expect(result.current).toBe(10);
+  });
+});
+
+describe('setupFakeTimerUser', () => {
+  it('types into a field under fake timers', { timeout: 1000 }, async () => {
+    const user = setupFakeTimerUser();
+    render(<input aria-label="field" />);
+
+    await user.type(screen.getByRole('textbox'), 'abc');
+
+    expect(screen.getByRole('textbox')).toHaveValue('abc');
+  });
+
+  it('switches to fake timers', () => {
+    setupFakeTimerUser();
+
+    expect(vi.isFakeTimers()).toBe(true);
+  });
+
+  it('leaves real timers for the next test', () => {
+    expect(vi.isFakeTimers()).toBe(false);
+  });
+
+  it('leaves no jest global for the next test', () => {
+    expect('jest' in globalThis).toBe(false);
   });
 });

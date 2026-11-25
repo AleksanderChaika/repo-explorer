@@ -1,10 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { render, renderHook } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { createMemoryRouter } from 'react-router';
 import type { LoaderFunction } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
+import { onTestFinished, vi } from 'vitest';
 import { routes } from '@/app/routes';
 import type { RateLimitGate } from '@/features/search/rateLimitGate';
 import { createRateLimitGate } from '@/features/search/rateLimitGate';
@@ -14,6 +16,19 @@ function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
+}
+
+export function setupFakeTimerUser() {
+  const advanceTimersByTime = (ms: number) => {
+    vi.advanceTimersByTime(ms);
+  };
+  vi.useFakeTimers();
+  vi.stubGlobal('jest', { advanceTimersByTime });
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+  return userEvent.setup({ advanceTimers: advanceTimersByTime });
 }
 
 interface RenderWithProvidersOptions {
