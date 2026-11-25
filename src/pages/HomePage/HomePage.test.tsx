@@ -2,7 +2,7 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw/http';
 import { delay } from 'msw/utils/delay';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { repository } from '@/test/fixtures';
 import { server } from '@/test/server';
 import { renderWithProviders, setupFakeTimerUser } from '@/test/utils';
@@ -80,6 +80,40 @@ async function renderPendingNextPage() {
   await card('react-1');
   await userEvent.click(screen.getByRole('link', { name: 'Next' }));
   await waitFor(() => expect(requests).toHaveLength(2));
+}
+
+function threePages(url: URL) {
+  return Number(url.searchParams.get('page')) > 3
+    ? HttpResponse.json({
+        total_count: 45,
+        incomplete_results: false,
+        items: [],
+      })
+    : page(url);
+}
+
+function recordAddedText() {
+  const added: string[] = [];
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === 'characterData') {
+        added.push(record.oldValue ?? '', record.target.textContent ?? '');
+      }
+      for (const node of record.addedNodes) {
+        added.push(node.textContent ?? '');
+      }
+    }
+  });
+  observer.observe(document.body, {
+    characterData: true,
+    characterDataOldValue: true,
+    childList: true,
+    subtree: true,
+  });
+  onTestFinished(() => {
+    observer.disconnect();
+  });
+  return added;
 }
 
 describe('HomePage', () => {
@@ -330,6 +364,97 @@ describe('HomePage', () => {
       await act(() => router.navigate(-1));
 
       expect(await card('react-1')).toBeInTheDocument();
+    });
+  });
+
+  describe('a page past the last one', () => {
+    async function renderClamped() {
+      handleSearch(threePages);
+      const view = renderWithProviders({ route: '/?q=react&page=9' });
+      await card('react-3');
+      return view;
+    }
+
+    it('is replaced with the last page', async () => {
+      const { router } = await renderClamped();
+
+      expect(router.state.location.search).toBe('?q=react&page=3');
+    });
+
+    it('is left out of the history', async () => {
+      handleSearch(threePages);
+      const { router } = renderWithProviders({ route: '/?q=first' });
+      await card('first-1');
+      await act(() => router.navigate('/?q=react&page=9'));
+      await card('react-3');
+
+      await act(() => router.navigate(-1));
+
+      expect(router.state.location.search).toBe('?q=first');
+    });
+
+    it('is replaced again when it is opened a second time', async () => {
+      const { router } = await renderClamped();
+
+      await act(() => router.navigate('/?q=react&page=9'));
+
+      await waitFor(() =>
+        expect(router.state.location.search).toBe('?q=react&page=3'),
+      );
+    });
+
+    async function renderReplacing() {
+      const requests = handleSearch((url) =>
+        url.searchParams.get('page') === '9' ? threePages(url) : never(),
+      );
+      renderWithProviders({ route: '/?q=react&page=9' });
+      await waitFor(() =>
+        expect(requests.at(-1)?.searchParams.get('page')).toBe('3'),
+      );
+      return requests;
+    }
+
+    it('never shows the empty results of that page', async () => {
+      const added = recordAddedText();
+
+      const requests = await renderReplacing();
+
+      expect(requests).toHaveLength(2);
+      expect(added.join()).not.toContain('45 repositories');
+      expect(added.join()).not.toContain('No repositories found');
+    });
+
+    it('shows the skeleton while the last page loads', async () => {
+      await renderReplacing();
+
+      expect(skeleton()).toBeInTheDocument();
+    });
+
+    it('shows a loading line while the last page loads', async () => {
+      await renderReplacing();
+
+      expect(screen.getByText('Loading…')).toBeInTheDocument();
+    });
+
+    it('shows no results heading while the last page loads', async () => {
+      await renderReplacing();
+
+      expect(
+        screen.queryByRole('heading', { name: 'Search results' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('is not decided by the results of another query', async () => {
+      handleSearch((url) =>
+        url.searchParams.get('q') === 'react' ? page(url) : never(),
+      );
+      const { router } = renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+
+      await act(() => router.navigate('/?q=vue&page=5'));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+
+      expect(router.state.location.search).toBe('?q=vue&page=5');
     });
   });
 });

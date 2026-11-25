@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
 import EmptyState from '@/features/search/EmptyState';
 import Pagination from '@/features/search/Pagination';
 import RateLimitBlocked from '@/features/search/RateLimitBlocked';
@@ -7,6 +7,7 @@ import ResultsSkeleton from '@/features/search/ResultsSkeleton';
 import ResultsSummary from '@/features/search/ResultsSummary';
 import SearchError from '@/features/search/SearchError';
 import SearchForm from '@/features/search/SearchForm';
+import { lastPage } from '@/features/search/searchParams';
 import type { SearchState } from '@/features/search/searchParams';
 import { useRepositorySearch } from '@/features/search/useRepositorySearch';
 import type { RepositorySearch } from '@/features/search/useRepositorySearch';
@@ -57,12 +58,29 @@ function Results({ search, state }: ResultsProps) {
   }
 }
 
+function pageToClamp(search: RepositorySearch, page: number): number | null {
+  if (search.kind !== 'success' || search.isPlaceholderData) {
+    return null;
+  }
+  const last = lastPage(search.data.total_count);
+  return page > last ? last : null;
+}
+
 function HomePage() {
-  const { state, setQuery, setSort, setOrder } = useSearchState();
+  const { state, setQuery, setSort, setOrder, clampPage } = useSearchState();
   const search = useRepositorySearch(state);
+  const overflow = pageToClamp(search, state.page);
+  const view: RepositorySearch =
+    overflow === null ? search : { kind: 'loading' };
   const isLoading =
-    search.kind === 'loading' ||
-    (search.kind === 'success' && search.isPlaceholderData);
+    view.kind === 'loading' ||
+    (view.kind === 'success' && view.isPlaceholderData);
+
+  useEffect(() => {
+    if (overflow !== null) {
+      clampPage(overflow);
+    }
+  }, [overflow, clampPage]);
 
   return (
     <>
@@ -78,7 +96,7 @@ function HomePage() {
       />
       <section aria-label="Results" aria-busy={isLoading}>
         {isLoading && <p className={styles.loading}>Loading…</p>}
-        <Results search={search} state={state} />
+        <Results search={view} state={state} />
       </section>
     </>
   );
