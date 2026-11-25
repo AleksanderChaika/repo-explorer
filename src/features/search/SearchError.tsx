@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ApiFailure } from '@/api/errors';
 import { formatRemaining, formatTime } from './format';
+import { describeError } from './messages';
 import styles from './SearchError.module.scss';
 
 interface SearchErrorProps {
@@ -79,60 +80,18 @@ function RateLimitView({ resetAt, onRetry }: RateLimitViewProps) {
 }
 
 function SearchError({ error, onRetry }: SearchErrorProps) {
-  switch (error.kind) {
-    case 'network':
-      return (
-        <ErrorView
-          title="Connection problem"
-          message="Couldn't reach GitHub. Check your connection and try again."
-          onRetry={onRetry}
-        />
-      );
-    case 'http':
-      if (error.status === 422) {
-        return (
-          <ErrorView
-            title="Search query not accepted"
-            message="GitHub couldn't process this search. Try a different query."
-            onRetry={onRetry}
-          />
-        );
-      }
-      return (
-        <ErrorView
-          title="Something went wrong"
-          message={`GitHub returned an error (status ${error.status}). Try again in a moment.`}
-          onRetry={onRetry}
-        />
-      );
-    case 'rate-limit':
-      return (
-        <RateLimitView
-          key={error.resetAt.getTime()}
-          resetAt={error.resetAt}
-          onRetry={onRetry}
-        />
-      );
-    case 'parse':
-      return (
-        <ErrorView
-          title="Unexpected response"
-          message="GitHub sent a response we couldn't read. Try again."
-          onRetry={onRetry}
-        />
-      );
-    default: {
-      const unexpected: never = error;
-      void unexpected;
-      return (
-        <ErrorView
-          title="Something went wrong"
-          message="Please try again."
-          onRetry={onRetry}
-        />
-      );
-    }
+  if (error.kind === 'rate-limit') {
+    return (
+      <RateLimitView
+        key={error.resetAt.getTime()}
+        resetAt={error.resetAt}
+        onRetry={onRetry}
+      />
+    );
   }
+
+  const { title, message } = describeError(error);
+  return <ErrorView title={title} message={message} onRetry={onRetry} />;
 }
 
 export default SearchError;
