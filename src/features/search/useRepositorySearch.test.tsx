@@ -234,6 +234,32 @@ describe('useRepositorySearch', () => {
       expect(gate.getSnapshot()).toBeNull();
     });
 
+    it('requests a blocked key on its own once the block is over', async () => {
+      const reset = resetSeconds();
+      const requests = handleSearch((_request, count) =>
+        count === 1
+          ? rateLimited(reset)
+          : HttpResponse.json(searchResponse('vue')),
+      );
+
+      const { result, rerender } = renderSearch();
+      await waitFor(() => expect(kindOf(result.current)).toBe('error'));
+      rerender(searchState({ q: 'vue' }));
+      await pause();
+      expect(requests.count).toBe(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(61_000);
+      });
+
+      await waitFor(() =>
+        expect(result.current).toMatchObject({
+          kind: 'success',
+          data: { items: [{ name: 'vue' }] },
+        }),
+      );
+    });
+
     it('shows cached data of the current key while the gate is blocked', async () => {
       const requests = handleSearch();
 
