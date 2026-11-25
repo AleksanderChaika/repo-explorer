@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import type { NavigateOptions } from 'react-router';
 import type { SearchOrder, SearchSort } from '@/api/types';
 import { buildSearchParams, parseSearchState } from './searchParams';
 import type { SearchState } from './searchParams';
@@ -26,14 +27,14 @@ export function useSearchState() {
   }, [location]);
 
   const update = useCallback(
-    (patch: Partial<SearchState>) => {
+    (patch: Partial<SearchState>, options?: NavigateOptions) => {
       const current = parseSearch(latestSearch.current);
       const next = canonicalSearch({ ...current, ...patch });
       if (next === canonicalSearch(current)) {
         return;
       }
       latestSearch.current = next;
-      void navigate({ search: next });
+      void navigate({ search: next }, options);
     },
     [navigate],
   );
@@ -59,5 +60,14 @@ export function useSearchState() {
     [update],
   );
 
-  return { state, setQuery, setSort, setOrder };
+  const clampPage = useCallback(
+    (last: number) => {
+      if (parseSearch(latestSearch.current).page > last) {
+        update({ page: last }, { replace: true });
+      }
+    },
+    [update],
+  );
+
+  return { state, setQuery, setSort, setOrder, clampPage };
 }

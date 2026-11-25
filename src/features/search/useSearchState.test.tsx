@@ -140,7 +140,7 @@ describe('useSearchState', () => {
 
   it('keeps the setters identical across navigations', () => {
     const { result } = setup('/');
-    const { setQuery, setSort, setOrder } = result.current;
+    const { setQuery, setSort, setOrder, clampPage } = result.current;
 
     change(() => {
       result.current.setQuery('react');
@@ -149,6 +149,7 @@ describe('useSearchState', () => {
     expect(result.current.setQuery).toBe(setQuery);
     expect(result.current.setSort).toBe(setSort);
     expect(result.current.setOrder).toBe(setOrder);
+    expect(result.current.clampPage).toBe(clampPage);
   });
 
   it('compares with the latest URL after going back', async () => {
@@ -213,5 +214,51 @@ describe('useSearchState', () => {
     });
 
     expect(router.state.location.search).toBe('');
+  });
+
+  it('clamps a page past the last one and keeps the rest of the state', () => {
+    const { result, router } = setup('/?q=react&sort=stars&order=asc&page=9');
+
+    change(() => {
+      result.current.clampPage(3);
+    });
+
+    expect(router.state.location.search).toBe(
+      '?q=react&sort=stars&order=asc&page=3',
+    );
+  });
+
+  it('clamps with a replace navigation', () => {
+    const { result, router } = setup('/?q=react&page=9');
+
+    change(() => {
+      result.current.clampPage(3);
+    });
+
+    expect(router.state.historyAction).toBe('REPLACE');
+  });
+
+  it('does not raise a page below the last one', () => {
+    const { result, router } = setup('/?q=react&page=2');
+
+    change(() => {
+      result.current.clampPage(3);
+    });
+
+    expect(router.state.location.search).toBe('?q=react&page=2');
+  });
+
+  it('does not clamp a newer query that is still pending', () => {
+    const { result, router } = renderHookWithRouter(useSearchState, {
+      initialEntries: ['/?q=react&page=9'],
+      loader: () => new Promise<null>(() => {}),
+    });
+
+    change(() => {
+      result.current.setQuery('vue');
+      result.current.clampPage(3);
+    });
+
+    expect(router.state.navigation.location?.search).toBe('?q=vue');
   });
 });
