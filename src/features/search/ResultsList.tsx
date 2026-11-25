@@ -4,15 +4,16 @@ import styles from './ResultsList.module.scss';
 
 interface ResultsListProps {
   repositories: readonly Repository[];
+  labelledBy: string;
 }
 
-function ResultsList({ repositories }: ResultsListProps) {
+function ResultsList({ repositories, labelledBy }: ResultsListProps) {
   if (repositories.length === 0) {
     return null;
   }
 
   return (
-    <ul role="list" aria-label="Search results" className={styles.list}>
+    <ul role="list" aria-labelledby={labelledBy} className={styles.list}>
       {repositories.map((repository) => (
         <li key={repository.id}>
           <RepositoryCard repository={repository} />

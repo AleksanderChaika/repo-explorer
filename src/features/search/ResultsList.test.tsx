@@ -10,28 +10,33 @@ afterEach(() => {
 });
 
 describe('ResultsList', () => {
-  it('names the list "Search results"', () => {
-    render(<ResultsList repositories={repositories} />);
+  it('takes the list name from the labelling element', () => {
+    render(
+      <>
+        <h2 id="heading">Matching repositories</h2>
+        <ResultsList repositories={repositories} labelledBy="heading" />
+      </>,
+    );
 
     expect(
-      screen.getByRole('list', { name: 'Search results' }),
+      screen.getByRole('list', { name: 'Matching repositories' }),
     ).toBeInTheDocument();
   });
 
   it('sets the list role explicitly', () => {
-    render(<ResultsList repositories={repositories} />);
+    render(<ResultsList repositories={repositories} labelledBy="heading" />);
 
     expect(screen.getByRole('list')).toHaveAttribute('role', 'list');
   });
 
   it('renders one list item per repository', () => {
-    render(<ResultsList repositories={repositories} />);
+    render(<ResultsList repositories={repositories} labelledBy="heading" />);
 
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
   });
 
   it('renders a card inside every list item', () => {
-    render(<ResultsList repositories={repositories} />);
+    render(<ResultsList repositories={repositories} labelledBy="heading" />);
 
     const parents = screen
       .getAllByRole('article')
@@ -41,7 +46,7 @@ describe('ResultsList', () => {
   });
 
   it('keeps the order of the repositories', () => {
-    render(<ResultsList repositories={repositories} />);
+    render(<ResultsList repositories={repositories} labelledBy="heading" />);
 
     const hrefs = screen
       .getAllByRole('link')
@@ -55,7 +60,9 @@ describe('ResultsList', () => {
   });
 
   it('renders nothing for an empty list', () => {
-    const { container } = render(<ResultsList repositories={[]} />);
+    const { container } = render(
+      <ResultsList repositories={[]} labelledBy="heading" />,
+    );
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -63,7 +70,7 @@ describe('ResultsList', () => {
   it('does not warn about duplicate keys for names of equal length', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    render(<ResultsList repositories={repositories} />);
+    render(<ResultsList repositories={repositories} labelledBy="heading" />);
 
     expect(spy).not.toHaveBeenCalled();
   });
