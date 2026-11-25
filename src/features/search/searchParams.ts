@@ -28,7 +28,7 @@ export interface ParsedSearchState {
   needsCanonicalization: boolean;
 }
 
-function normalizeQuery(raw: string | null): string {
+export function normalizeQuery(raw: string | null): string {
   const collapsed = (raw ?? '').replace(/\s+/g, ' ').trim();
   return Array.from(collapsed).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
 }
