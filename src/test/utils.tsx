@@ -8,8 +8,8 @@ import type { LoaderFunction } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { onTestFinished, vi } from 'vitest';
 import { routes } from '@/app/routes';
-import type { RateLimitGate } from '@/features/search/rateLimitGate';
-import { createRateLimitGate } from '@/features/search/rateLimitGate';
+import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
+import { createRateLimitGate } from '@/features/rateLimit/rateLimitGate';
 import TestProviders from './TestProviders';
 
 function createTestQueryClient() {

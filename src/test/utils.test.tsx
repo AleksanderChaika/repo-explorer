@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import { useLocation, useNavigate } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import { createRateLimitGate } from '@/features/search/rateLimitGate';
-import { useRateLimitGate } from '@/features/search/rateLimitGateContext';
+import { createRateLimitGate } from '@/features/rateLimit/rateLimitGate';
+import { useRateLimitGate } from '@/features/rateLimit/rateLimitGateContext';
 import {
   renderHookWithProviders,
   renderHookWithRouter,

@@ -1,8 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import RateLimitGateProvider from '@/features/search/RateLimitGateProvider';
-import type { RateLimitGate } from '@/features/search/rateLimitGate';
+import RateLimitGateProvider from '@/features/rateLimit/RateLimitGateProvider';
+import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
 
 interface TestProvidersProps {
   queryClient: QueryClient;
