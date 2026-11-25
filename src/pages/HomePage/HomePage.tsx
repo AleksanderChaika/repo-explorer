@@ -1,5 +1,6 @@
 import { useEffect, useId } from 'react';
 import EmptyState from '@/features/search/EmptyState';
+import { describeAlert, describeStatus } from '@/features/search/messages';
 import Pagination from '@/features/search/Pagination';
 import RateLimitBlocked from '@/features/search/RateLimitBlocked';
 import ResultsList from '@/features/search/ResultsList';
@@ -94,6 +95,12 @@ function HomePage() {
         setSort={setSort}
         setOrder={setOrder}
       />
+      <p role="status" className={styles.announcement}>
+        {describeStatus(view, state.page)}
+      </p>
+      <p role="alert" className={styles.announcement}>
+        {describeAlert(view)}
+      </p>
       <section aria-label="Results" aria-busy={isLoading}>
         {isLoading && <p className={styles.loading}>Loading…</p>}
         <Results search={view} state={state} />

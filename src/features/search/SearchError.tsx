@@ -1,6 +1,6 @@
 import type { ApiFailure } from '@/api/errors';
 import { formatRemaining, formatTime } from './format';
-import { describeError } from './messages';
+import { describeError, RATE_LIMIT_TITLE } from './messages';
 import { useCountdown } from './useCountdown';
 import styles from './SearchError.module.scss';
 
@@ -53,7 +53,7 @@ function RateLimitView({ resetAt, onRetry }: RateLimitViewProps) {
 
   return (
     <ErrorView
-      title="Rate limit reached"
+      title={RATE_LIMIT_TITLE}
       message={message}
       onRetry={onRetry}
       retryDisabled={waiting}

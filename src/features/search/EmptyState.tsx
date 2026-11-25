@@ -1,4 +1,4 @@
-import { MIN_QUERY_LENGTH } from './searchParams';
+import { SHORT_QUERY_MESSAGE } from './messages';
 import styles from './EmptyState.module.scss';
 
 export type EmptyStateProps =
@@ -19,7 +19,7 @@ function getContent(props: EmptyStateProps): EmptyStateContent {
     case 'short':
       return {
         title: 'Keep typing',
-        message: `Enter at least ${MIN_QUERY_LENGTH} characters to search.`,
+        message: SHORT_QUERY_MESSAGE,
       };
     case 'no-results':
       return {

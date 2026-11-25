@@ -457,4 +457,158 @@ describe('HomePage', () => {
       expect(router.state.location.search).toBe('?q=vue&page=5');
     });
   });
+
+  describe('announcements', () => {
+    const status = () => screen.getByRole('status');
+    const alert = () => screen.getByRole('alert');
+
+    function respondWith(total: number, incomplete = false) {
+      handleSearch((url) =>
+        HttpResponse.json({
+          total_count: total,
+          incomplete_results: incomplete,
+          items:
+            total === 0 ? [] : [repository(url.searchParams.get('q') ?? '')],
+        }),
+      );
+    }
+
+    function rateLimited(resetMs: number) {
+      return new HttpResponse(null, {
+        status: 403,
+        headers: {
+          'x-ratelimit-remaining': '0',
+          'x-ratelimit-reset': String(resetMs / 1000),
+        },
+      });
+    }
+
+    async function renderRateLimited() {
+      const user = setupFakeTimerUser();
+      vi.setSystemTime(Date.UTC(2026, 0, 15, 20, 0, 0));
+      handleSearch(() => rateLimited(Date.UTC(2026, 0, 15, 20, 1, 0)));
+      renderWithProviders({ route: '/?q=react' });
+      await heading('Rate limit reached');
+      return user;
+    }
+
+    it.each(['status', 'alert'])(
+      'keeps the same %s region across states',
+      async (role) => {
+        handleSearch();
+        renderWithProviders();
+        await screen.findByRole('searchbox');
+        const region = screen.getByRole(role);
+
+        await submit('react');
+        await card('react-1');
+
+        expect(screen.getByRole(role)).toBe(region);
+      },
+    );
+
+    it.each(['status', 'alert'])(
+      'keeps the %s region outside the busy results',
+      async (role) => {
+        await renderLoading();
+
+        expect(results()).not.toContainElement(screen.getByRole(role));
+      },
+    );
+
+    it.each([
+      ['an empty query', '/', ''],
+      ['a short query', '/?q=a', 'Enter at least 2 characters to search.'],
+    ])('announces the status of %s', async (_name, route, text) => {
+      renderWithProviders({ route });
+      await screen.findByRole('searchbox');
+
+      expect(status().textContent).toBe(text);
+    });
+
+    it('does not announce loading', async () => {
+      await renderLoading();
+
+      expect(status()).toBeEmptyDOMElement();
+    });
+
+    it('does not announce old results while loading', async () => {
+      await renderPendingNextPage();
+
+      expect(status()).toBeEmptyDOMElement();
+    });
+
+    it('announces the total and the page', async () => {
+      await renderResults();
+
+      expect(status().textContent).toBe('45 repositories. Page 1 of 3.');
+    });
+
+    it.each([
+      ['a single page', 1, false, '1 repository.'],
+      [
+        'a limited total',
+        4321,
+        false,
+        'Showing the first 1,000 of 4,321 repositories. Page 1 of 50.',
+      ],
+      [
+        'incomplete results',
+        2,
+        true,
+        '2 repositories. Some results may be missing because the search timed out.',
+      ],
+      ['no results', 0, false, 'No repositories found.'],
+    ])('announces %s', async (_name, total, incomplete, text) => {
+      respondWith(total, incomplete);
+      renderWithProviders({ route: '/?q=react' });
+
+      await waitFor(() => expect(status().textContent).toBe(text));
+    });
+
+    it('announces a paused search', async () => {
+      const user = await renderRateLimited();
+
+      await user.type(screen.getByRole('searchbox'), '-dom{Enter}');
+      await heading('Search paused');
+
+      expect(status().textContent).toBe(
+        'Search paused. Your search will start at 12:01.',
+      );
+    });
+
+    it('has no alert for results', async () => {
+      await renderResults();
+
+      expect(alert()).toBeEmptyDOMElement();
+    });
+
+    it('announces an error in the alert', async () => {
+      handleSearch(() => HttpResponse.error());
+      renderWithProviders({ route: '/?q=react' });
+      await heading('Connection problem');
+
+      expect(alert().textContent).toBe(
+        "Connection problem. Couldn't reach GitHub. Check your connection and try again.",
+      );
+    });
+
+    it('does not repeat an error in the status', async () => {
+      handleSearch(() => HttpResponse.error());
+      renderWithProviders({ route: '/?q=react' });
+      await heading('Connection problem');
+
+      expect(status()).toBeEmptyDOMElement();
+    });
+
+    it('announces the reset time without a countdown', async () => {
+      await renderRateLimited();
+
+      await act(() => vi.advanceTimersByTimeAsync(5000));
+
+      expect(alert().textContent).toBe(
+        'Rate limit reached. You can search again at 12:01.',
+      );
+    });
+  });
 });

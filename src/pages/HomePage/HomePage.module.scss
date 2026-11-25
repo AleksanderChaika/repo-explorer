@@ -1,3 +1,5 @@
+@use '@/styles/mixins' as *;
+
 .loading {
   margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
@@ -10,4 +12,8 @@
 
 .list {
   margin-top: var(--space-4);
+}
+
+.announcement {
+  @include visually-hidden;
 }
