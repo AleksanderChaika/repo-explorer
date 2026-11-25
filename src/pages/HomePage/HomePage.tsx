@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import EmptyState from '@/features/search/EmptyState';
 import { describeAlert, describeStatus } from '@/features/search/messages';
 import Pagination from '@/features/search/Pagination';
@@ -18,10 +18,12 @@ import styles from './HomePage.module.scss';
 interface ResultsProps {
   search: RepositorySearch;
   state: SearchState;
+  onRetry: () => void;
 }
 
-function Results({ search, state }: ResultsProps) {
+function Results({ search, state, onRetry }: ResultsProps) {
   const headingId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   switch (search.kind) {
     case 'idle':
@@ -31,7 +33,15 @@ function Results({ search, state }: ResultsProps) {
     case 'loading':
       return <ResultsSkeleton />;
     case 'error':
-      return <SearchError error={search.error} onRetry={search.refetch} />;
+      return (
+        <SearchError
+          error={search.error}
+          onRetry={() => {
+            onRetry();
+            search.refetch();
+          }}
+        />
+      );
     case 'success': {
       const { total_count, incomplete_results, items } = search.data;
       if (search.isPlaceholderData && items.length === 0) {
@@ -42,7 +52,12 @@ function Results({ search, state }: ResultsProps) {
       }
       return (
         <>
-          <h2 id={headingId} className={styles.heading}>
+          <h2
+            ref={headingRef}
+            id={headingId}
+            className={styles.heading}
+            tabIndex={-1}
+          >
             Search results
           </h2>
           <ResultsSummary
@@ -52,7 +67,11 @@ function Results({ search, state }: ResultsProps) {
           <div className={styles.list}>
             <ResultsList repositories={items} labelledBy={headingId} />
           </div>
-          <Pagination state={state} totalCount={total_count} />
+          <Pagination
+            state={state}
+            totalCount={total_count}
+            onNavigate={() => headingRef.current?.focus()}
+          />
         </>
       );
     }
@@ -70,6 +89,7 @@ function pageToClamp(search: RepositorySearch, page: number): number | null {
 function HomePage() {
   const { state, setQuery, setSort, setOrder, clampPage } = useSearchState();
   const search = useRepositorySearch(state);
+  const resultsRef = useRef<HTMLElement>(null);
   const overflow = pageToClamp(search, state.page);
   const view: RepositorySearch =
     overflow === null ? search : { kind: 'loading' };
@@ -101,9 +121,18 @@ function HomePage() {
       <p role="alert" className={styles.announcement}>
         {describeAlert(view)}
       </p>
-      <section aria-label="Results" aria-busy={isLoading}>
+      <section
+        ref={resultsRef}
+        aria-label="Results"
+        aria-busy={isLoading}
+        tabIndex={-1}
+      >
         {isLoading && <p className={styles.loading}>Loading…</p>}
-        <Results search={view} state={state} />
+        <Results
+          search={view}
+          state={state}
+          onRetry={() => resultsRef.current?.focus()}
+        />
       </section>
     </>
   );

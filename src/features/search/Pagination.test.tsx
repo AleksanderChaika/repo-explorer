@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import Pagination from './Pagination';
 import type { SearchState } from './searchParams';
 
@@ -14,18 +14,35 @@ function renderPagination(
   state: SearchState,
   totalCount: number,
   route = '/?q=react',
+  onNavigate?: () => void,
 ) {
   const router = createMemoryRouter(
     [
       {
         path: '/',
-        element: <Pagination state={state} totalCount={totalCount} />,
+        element: (
+          <Pagination
+            state={state}
+            totalCount={totalCount}
+            onNavigate={onNavigate}
+          />
+        ),
       },
     ],
     { initialEntries: [route] },
   );
   const view = render(<RouterProvider router={router} />);
   return { ...view, router };
+}
+
+function keepDocument() {
+  const cancel = (event: Event) => {
+    event.preventDefault();
+  };
+  window.addEventListener('click', cancel);
+  onTestFinished(() => {
+    window.removeEventListener('click', cancel);
+  });
 }
 
 describe('Pagination', () => {
@@ -193,4 +210,38 @@ describe('Pagination', () => {
 
     expect(container.querySelector('[aria-live]')).toBeNull();
   });
+
+  it.each(['Previous', 'Next'])('reports a plain click on %s', async (name) => {
+    const onNavigate = vi.fn<() => void>();
+    renderPagination(searchState({ page: 2 }), 100, '/?q=react', onNavigate);
+
+    await userEvent.click(screen.getByRole('link', { name }));
+
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['Previous', 'Next'])('reports Enter on %s', async (name) => {
+    const onNavigate = vi.fn<() => void>();
+    renderPagination(searchState({ page: 2 }), 100, '/?q=react', onNavigate);
+    screen.getByRole('link', { name }).focus();
+
+    await userEvent.keyboard('{Enter}');
+
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['metaKey', 'ctrlKey', 'shiftKey', 'altKey'])(
+    'does not report a click with %s',
+    (modifier) => {
+      keepDocument();
+      const onNavigate = vi.fn<() => void>();
+      renderPagination(searchState({ page: 2 }), 100, '/?q=react', onNavigate);
+
+      fireEvent.click(screen.getByRole('link', { name: 'Next' }), {
+        [modifier]: true,
+      });
+
+      expect(onNavigate).not.toHaveBeenCalled();
+    },
+  );
 });

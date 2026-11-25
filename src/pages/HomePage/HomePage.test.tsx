@@ -611,4 +611,78 @@ describe('HomePage', () => {
       );
     });
   });
+
+  describe('focus', () => {
+    const resultsHeading = () =>
+      screen.getByRole('heading', { level: 2, name: 'Search results' });
+
+    function holdSecondRequest(first: (url: URL) => Response) {
+      let release = () => {};
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      onTestFinished(release);
+      handleSearch(async (url, count) => {
+        if (count === 1) {
+          return first(url);
+        }
+        await held;
+        return page(url);
+      });
+      return release;
+    }
+
+    it.each([
+      ['Next', 1, 2],
+      ['Previous', 2, 1],
+    ])('stays on the results heading after %s', async (link, from, to) => {
+      const release = holdSecondRequest(page);
+      renderWithProviders({ route: `/?q=react&page=${from}` });
+      await card(`react-${from}`);
+
+      await userEvent.click(screen.getByRole('link', { name: link }));
+
+      expect(resultsHeading()).toHaveFocus();
+
+      release();
+      await card(`react-${to}`);
+
+      expect(resultsHeading()).toHaveFocus();
+    });
+
+    it('moves to the results after Retry', async () => {
+      const release = holdSecondRequest(() => HttpResponse.error());
+      renderWithProviders({ route: '/?q=react' });
+      await heading('Connection problem');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+      expect(results()).toHaveFocus();
+
+      release();
+      await card('react-1');
+
+      expect(results()).toHaveFocus();
+    });
+
+    it('is not moved when the page first loads', async () => {
+      await renderResults();
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it('is not moved on Back', async () => {
+      handleSearch();
+      const { router } = renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+      await userEvent.click(screen.getByRole('link', { name: 'Next' }));
+      await card('react-2');
+      screen.getByRole('searchbox').focus();
+
+      await act(() => router.navigate(-1));
+      await card('react-1');
+
+      expect(screen.getByRole('searchbox')).toHaveFocus();
+    });
+  });
 });
