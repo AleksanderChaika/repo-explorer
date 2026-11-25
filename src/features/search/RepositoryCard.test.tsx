@@ -93,11 +93,37 @@ describe('RepositoryCard', () => {
 
     const avatar = screen.getByRole('presentation');
 
-    expect(avatar).toHaveAttribute('src', 'https://example.test/avatar.png');
+    expect(avatar).toHaveAttribute(
+      'src',
+      'https://example.test/avatar.png?s=20',
+    );
     expect(avatar).toHaveAttribute('alt', '');
     expect(avatar).toHaveAttribute('loading', 'lazy');
     expect(avatar).toHaveAttribute('width', '20');
     expect(avatar).toHaveAttribute('height', '20');
+  });
+
+  it('offers the avatar for 1x, 2x and 3x screens', () => {
+    renderCard();
+
+    expect(screen.getByRole('presentation')).toHaveAttribute(
+      'srcset',
+      'https://example.test/avatar.png?s=20 1x, https://example.test/avatar.png?s=40 2x, https://example.test/avatar.png?s=60 3x',
+    );
+  });
+
+  it('keeps the existing query of the avatar URL', () => {
+    renderCard({
+      owner: {
+        login: 'owner',
+        avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+      },
+    });
+
+    expect(screen.getByRole('presentation')).toHaveAttribute(
+      'src',
+      'https://avatars.githubusercontent.com/u/1?v=4&s=20',
+    );
   });
 
   it('shows an unknown owner without an avatar', () => {
