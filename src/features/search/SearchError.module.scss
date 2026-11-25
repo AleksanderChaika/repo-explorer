@@ -1,14 +1,11 @@
+@use '@/styles/mixins' as *;
+
 .root {
-  padding: var(--space-6) var(--space-4);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  text-align: center;
-  overflow-wrap: anywhere;
+  @include notice(1px solid var(--color-danger));
 }
 
 .title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-size-lg);
+  @include notice-title;
 }
 
 .message {
