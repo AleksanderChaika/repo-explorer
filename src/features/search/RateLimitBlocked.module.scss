@@ -1,7 +1,7 @@
 @use '@/styles/mixins' as *;
 
 .root {
-  @include notice(1px solid var(--color-danger));
+  @include notice(1px solid var(--color-border-strong));
 }
 
 .title {
