@@ -33,6 +33,9 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'jsx-a11y/no-redundant-roles': ['error', { ul: ['list'] }],
+    },
   },
   {
     files: ['vite.config.ts', 'eslint.config.js', 'lint-staged.config.js'],

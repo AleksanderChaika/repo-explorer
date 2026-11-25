@@ -87,6 +87,12 @@ describe('parseRateLimit', () => {
       expect(result?.resetAt).toEqual(new Date(NOW + 10_000));
     });
 
+    it('falls back to one minute when retry-after is 0', () => {
+      const result = parseRateLimit(response(429, { 'retry-after': '0' }), NOW);
+
+      expect(result?.resetAt).toEqual(new Date(NOW + 60_000));
+    });
+
     it('ignores a retry-after value that is not a number of seconds', () => {
       const result = parseRateLimit(
         response(429, { 'retry-after': 'soon' }),
@@ -124,6 +130,46 @@ describe('parseRateLimit', () => {
       );
 
       expect(result?.resetAt).toEqual(new Date(RESET_EPOCH_SECONDS * 1000));
+    });
+
+    it('falls back to one minute when reset is in the past', () => {
+      const result = parseRateLimit(
+        response(403, {
+          'x-ratelimit-remaining': '0',
+          'x-ratelimit-reset': String(Math.floor(NOW / 1000) - 30),
+          'x-ratelimit-resource': 'search',
+        }),
+        NOW,
+      );
+
+      expect(result).toEqual({
+        resetAt: new Date(NOW + 60_000),
+        resource: 'search',
+      });
+    });
+
+    it('falls back to one minute when reset is exactly now', () => {
+      const result = parseRateLimit(
+        response(429, {
+          'x-ratelimit-remaining': '0',
+          'x-ratelimit-reset': String(NOW / 1000),
+        }),
+        NOW,
+      );
+
+      expect(result?.resetAt).toEqual(new Date(NOW + 60_000));
+    });
+
+    it('keeps a reset one second in the future unchanged', () => {
+      const result = parseRateLimit(
+        response(429, {
+          'x-ratelimit-remaining': '0',
+          'x-ratelimit-reset': String(NOW / 1000 + 1),
+        }),
+        NOW,
+      );
+
+      expect(result?.resetAt).toEqual(new Date(NOW + 1_000));
     });
 
     it('falls back to one minute when remaining is 0 but reset is missing', () => {
