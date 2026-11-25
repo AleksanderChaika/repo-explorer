@@ -1,5 +1,5 @@
 import { act } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderHookWithRouter } from '@/test/utils';
 import { useSearchState } from './useSearchState';
 
@@ -165,6 +165,43 @@ describe('useSearchState', () => {
     });
 
     expect(router.state.location.search).toBe('?q=second');
+  });
+
+  it('does not repeat a navigation that is still pending', () => {
+    const loader = vi.fn(() => new Promise<null>(() => {}));
+    const { result, rerender } = renderHookWithRouter(useSearchState, {
+      loader,
+    });
+
+    change(() => {
+      result.current.setQuery('react');
+    });
+    rerender();
+    change(() => {
+      result.current.setQuery('react');
+    });
+
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes again after going back cancels a pending navigation', async () => {
+    const { result, router } = renderHookWithRouter(useSearchState, {
+      initialEntries: ['/?q=first', '/?q=first'],
+      loader: ({ request }) =>
+        request.url.endsWith('q=second') ? new Promise(() => {}) : null,
+    });
+
+    change(() => {
+      result.current.setQuery('second');
+    });
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    change(() => {
+      result.current.setQuery('second');
+    });
+
+    expect(router.state.navigation.location?.search).toBe('?q=second');
   });
 
   it('compares with the written URL for calls in the same tick', () => {

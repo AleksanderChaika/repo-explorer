@@ -15,14 +15,15 @@ function canonicalSearch(state: SearchState): string {
 }
 
 export function useSearchState() {
-  const { search } = useLocation();
+  const location = useLocation();
+  const { search } = location;
   const navigate = useNavigate();
   const state = useMemo(() => parseSearch(search), [search]);
   const latestSearch = useRef(search);
 
   useLayoutEffect(() => {
-    latestSearch.current = search;
-  });
+    latestSearch.current = location.search;
+  }, [location]);
 
   const update = useCallback(
     (patch: Partial<SearchState>) => {
