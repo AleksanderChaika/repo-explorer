@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import type { ApiFailure } from '@/api/errors';
 import { formatRemaining, formatTime } from './format';
 import { describeError } from './messages';
+import { useCountdown } from './useCountdown';
 import styles from './SearchError.module.scss';
 
 interface SearchErrorProps {
@@ -44,26 +44,8 @@ interface RateLimitViewProps {
 }
 
 function RateLimitView({ resetAt, onRetry }: RateLimitViewProps) {
-  const resetAtMs = resetAt.getTime();
-  const [now, setNow] = useState(() => Date.now());
-  const remaining = resetAtMs - now;
+  const remaining = useCountdown(resetAt.getTime());
   const waiting = remaining > 0;
-
-  useEffect(() => {
-    if (resetAtMs - Date.now() <= 0) {
-      return;
-    }
-    const id = setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-      if (resetAtMs - current <= 0) {
-        clearInterval(id);
-      }
-    }, 1000);
-    return () => {
-      clearInterval(id);
-    };
-  }, [resetAtMs]);
 
   const message = waiting
     ? `GitHub is limiting requests. You can search again at ${formatTime(resetAt)} (in ${formatRemaining(remaining)}).`
