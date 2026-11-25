@@ -122,7 +122,8 @@ function HomePage() {
     <>
       <h1>Explore GitHub repositories</h1>
       <p>
-        Search public repositories, filter the results and keep your favorites.
+        Search public GitHub repositories, sort the results and page through
+        them.
       </p>
       <SearchForm
         state={state}
