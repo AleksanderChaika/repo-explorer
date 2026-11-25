@@ -684,5 +684,78 @@ describe('HomePage', () => {
 
       expect(screen.getByRole('searchbox')).toHaveFocus();
     });
+
+    async function pressNext() {
+      await userEvent.click(screen.getByRole('link', { name: 'Next' }));
+    }
+
+    it('moves to the results when the next page fails', async () => {
+      handleSearch((url, count) =>
+        count === 1 ? page(url) : HttpResponse.error(),
+      );
+      renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+
+      await pressNext();
+      await heading('Connection problem');
+
+      expect(results()).toHaveFocus();
+    });
+
+    it('moves to the results when the next page is paused', async () => {
+      handleSearch();
+      const { gate } = renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+      act(() => {
+        gate.report(new Date(Date.now() + 60_000));
+      });
+
+      await pressNext();
+      await heading('Search paused');
+
+      expect(results()).toHaveFocus();
+    });
+
+    async function renderFailingNewQuery() {
+      handleSearch((url, count) =>
+        count === 1 ? page(url) : HttpResponse.error(),
+      );
+      const { router } = renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+      return async () => {
+        await act(() => router.navigate('/?q=vue'));
+        await heading('Connection problem');
+      };
+    }
+
+    it('stays in the search field when the results go away', async () => {
+      const failNewQuery = await renderFailingNewQuery();
+      screen.getByRole('searchbox').focus();
+
+      await failNewQuery();
+
+      expect(screen.getByRole('searchbox')).toHaveFocus();
+    });
+
+    it('is not taken when nothing was focused', async () => {
+      const failNewQuery = await renderFailingNewQuery();
+
+      await failNewQuery();
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it('does not pass through the results while the heading stays', async () => {
+      handleSearch();
+      renderWithProviders({ route: '/?q=react' });
+      await card('react-1');
+      const focused = vi.fn<() => void>();
+      results().addEventListener('focus', focused);
+
+      await pressNext();
+      await card('react-2');
+
+      expect(focused).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef } from 'react';
 import EmptyState from '@/features/search/EmptyState';
 import { describeAlert, describeStatus } from '@/features/search/messages';
 import Pagination from '@/features/search/Pagination';
@@ -18,12 +18,24 @@ import styles from './HomePage.module.scss';
 interface ResultsProps {
   search: RepositorySearch;
   state: SearchState;
-  onRetry: () => void;
+  focusResults: () => void;
 }
 
-function Results({ search, state, onRetry }: ResultsProps) {
+function Results({ search, state, focusResults }: ResultsProps) {
   const headingId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const attachHeading = useCallback(
+    (node: HTMLHeadingElement | null) => {
+      headingRef.current = node;
+      return () => {
+        headingRef.current = null;
+        if (document.activeElement === node) {
+          focusResults();
+        }
+      };
+    },
+    [focusResults],
+  );
 
   switch (search.kind) {
     case 'idle':
@@ -37,7 +49,7 @@ function Results({ search, state, onRetry }: ResultsProps) {
         <SearchError
           error={search.error}
           onRetry={() => {
-            onRetry();
+            focusResults();
             search.refetch();
           }}
         />
@@ -53,7 +65,7 @@ function Results({ search, state, onRetry }: ResultsProps) {
       return (
         <>
           <h2
-            ref={headingRef}
+            ref={attachHeading}
             id={headingId}
             className={styles.heading}
             tabIndex={-1}
@@ -90,6 +102,9 @@ function HomePage() {
   const { state, setQuery, setSort, setOrder, clampPage } = useSearchState();
   const search = useRepositorySearch(state);
   const resultsRef = useRef<HTMLElement>(null);
+  const focusResults = useCallback(() => {
+    resultsRef.current?.focus();
+  }, []);
   const overflow = pageToClamp(search, state.page);
   const view: RepositorySearch =
     overflow === null ? search : { kind: 'loading' };
@@ -128,11 +143,7 @@ function HomePage() {
         tabIndex={-1}
       >
         {isLoading && <p className={styles.loading}>Loading…</p>}
-        <Results
-          search={view}
-          state={state}
-          onRetry={() => resultsRef.current?.focus()}
-        />
+        <Results search={view} state={state} focusResults={focusResults} />
       </section>
     </>
   );
