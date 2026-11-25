@@ -3,6 +3,7 @@ import { render, renderHook } from '@testing-library/react';
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { createMemoryRouter } from 'react-router';
+import type { LoaderFunction } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { routes } from '@/app/routes';
 import type { RateLimitGate } from '@/features/search/rateLimitGate';
@@ -70,6 +71,7 @@ interface RenderHookWithRouterOptions<
 > extends RenderHookWithProvidersOptions<Props> {
   initialEntries?: string[];
   initialIndex?: number;
+  loader?: LoaderFunction;
 }
 
 export function renderHookWithRouter<Result, Props = undefined>(
@@ -79,6 +81,7 @@ export function renderHookWithRouter<Result, Props = undefined>(
     initialProps,
     initialEntries = ['/'],
     initialIndex,
+    loader,
   }: RenderHookWithRouterOptions<Props> = {},
 ) {
   const queryClient = createTestQueryClient();
@@ -88,10 +91,14 @@ export function renderHookWithRouter<Result, Props = undefined>(
     return useContext(HookChildrenContext);
   }
 
-  const router = createMemoryRouter([{ path: '*', Component: HookRoute }], {
-    initialEntries,
-    initialIndex,
-  });
+  const router = createMemoryRouter(
+    [{ id: 'hook', path: '*', Component: HookRoute, loader }],
+    {
+      initialEntries,
+      initialIndex,
+      hydrationData: { loaderData: { hook: null } },
+    },
+  );
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (

@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { act } from '@testing-library/react';
 import { useLocation, useNavigate } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createRateLimitGate } from '@/features/search/rateLimitGate';
 import { useRateLimitGate } from '@/features/search/rateLimitGateContext';
 import { renderHookWithProviders, renderHookWithRouter } from './utils';
@@ -97,6 +97,25 @@ describe('renderHookWithRouter', () => {
     });
 
     expect(router.state.location.pathname).toBe('/next');
+  });
+
+  it('renders the hook right away when a loader is given', () => {
+    const { result } = renderHookWithRouter(useLocation, {
+      loader: () => null,
+    });
+
+    expect(result.current.pathname).toBe('/');
+  });
+
+  it('runs the given loader on navigation', async () => {
+    const loader = vi.fn(() => null);
+    const { router } = renderHookWithRouter(useLocation, { loader });
+
+    await act(async () => {
+      await router.navigate('/next');
+    });
+
+    expect(loader).toHaveBeenCalledTimes(1);
   });
 
   it('gives the hook the query client that it returns', () => {
