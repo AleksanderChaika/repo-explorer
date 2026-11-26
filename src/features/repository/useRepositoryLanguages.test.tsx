@@ -1,6 +1,6 @@
 import { act, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw/http';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRateLimitGate } from '@/features/rateLimit/rateLimitGate';
 import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
 import { languages } from '@/test/fixtures';
@@ -115,6 +115,27 @@ describe('useRepositoryLanguages', () => {
       blockedUntil: coreGate.getSnapshot(),
     });
     expect(paths).toHaveLength(0);
+  });
+
+  describe('when the block ends', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('requests on its own', async () => {
+      handle();
+      const coreGate = createRateLimitGate();
+      coreGate.report(new Date(Date.now() + 60_000));
+      const { result } = renderLanguages('owner/react', { coreGate });
+
+      await act(() => vi.advanceTimersByTimeAsync(61_000));
+
+      await waitFor(() => expect(kindOf(result.current)).toBe('success'));
+    });
   });
 
   it('keeps the languages when a refetch hits the rate limit', async () => {

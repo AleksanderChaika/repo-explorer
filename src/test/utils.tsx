@@ -35,15 +35,16 @@ interface RenderWithProvidersOptions {
   route?: string;
   initialEntries?: string[];
   gate?: RateLimitGate;
+  coreGate?: RateLimitGate;
 }
 
 export function renderWithProviders({
   route = '/',
   initialEntries = [route],
   gate = createRateLimitGate(),
+  coreGate = createRateLimitGate(),
 }: RenderWithProvidersOptions = {}) {
   const queryClient = createTestQueryClient();
-  const coreGate = createRateLimitGate();
   const router = createMemoryRouter(routes, { initialEntries });
 
   const view = render(

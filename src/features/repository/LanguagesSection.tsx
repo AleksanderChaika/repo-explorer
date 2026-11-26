@@ -3,6 +3,7 @@ import type { Ref } from 'react';
 import RateLimitNotice from '@/components/ErrorNotice/RateLimitNotice';
 import LanguageBar from './LanguageBar';
 import styles from './LanguagesSection.module.scss';
+import { LANGUAGES_UNAVAILABLE_TITLE } from './messages';
 import RequestErrorNotice from './RequestErrorNotice';
 import type { LanguagesState } from './useRepositoryLanguages';
 
@@ -38,7 +39,7 @@ function LanguagesContent({ state, onRetry }: LanguagesContentProps) {
     case 'error':
       return (
         <RequestErrorNotice
-          title="Languages unavailable"
+          title={LANGUAGES_UNAVAILABLE_TITLE}
           headingLevel={3}
           error={state.error}
           onRetry={onRetry}
