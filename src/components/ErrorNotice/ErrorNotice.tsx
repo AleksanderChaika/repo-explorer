@@ -2,12 +2,15 @@ import styles from './ErrorNotice.module.scss';
 
 export type NoticeTone = 'danger' | 'neutral';
 
+export type NoticeHeadingLevel = 2 | 3;
+
 interface ErrorNoticeProps {
   title: string;
   message: string;
   tone?: NoticeTone;
   onRetry?: () => void;
   retryDisabled?: boolean;
+  headingLevel?: NoticeHeadingLevel;
 }
 
 function ErrorNotice({
@@ -16,10 +19,13 @@ function ErrorNotice({
   tone = 'danger',
   onRetry,
   retryDisabled = false,
+  headingLevel = 2,
 }: ErrorNoticeProps) {
+  const Heading = `h${headingLevel}` as const;
+
   return (
     <div className={styles[tone]}>
-      <h2 className={styles.title}>{title}</h2>
+      <Heading className={styles.title}>{title}</Heading>
       <p
         className={
           onRetry ? `${styles.message} ${styles.withAction}` : styles.message

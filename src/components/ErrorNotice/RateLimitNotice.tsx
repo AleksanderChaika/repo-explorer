@@ -1,7 +1,7 @@
 import { formatRemaining, formatTime } from '@/lib/format';
 import { useCountdown } from '@/lib/useCountdown';
 import ErrorNotice from './ErrorNotice';
-import type { NoticeTone } from './ErrorNotice';
+import type { NoticeHeadingLevel, NoticeTone } from './ErrorNotice';
 
 interface RateLimitNoticeProps {
   title: string;
@@ -10,6 +10,7 @@ interface RateLimitNoticeProps {
   readyMessage: string;
   tone?: NoticeTone;
   onRetry?: () => void;
+  headingLevel?: NoticeHeadingLevel;
 }
 
 function Countdown({
@@ -19,6 +20,7 @@ function Countdown({
   readyMessage,
   tone,
   onRetry,
+  headingLevel,
 }: RateLimitNoticeProps) {
   const remaining = useCountdown(until);
   const waiting = remaining > 0;
@@ -33,6 +35,7 @@ function Countdown({
       tone={tone}
       onRetry={onRetry}
       retryDisabled={waiting}
+      headingLevel={headingLevel}
     />
   );
 }
