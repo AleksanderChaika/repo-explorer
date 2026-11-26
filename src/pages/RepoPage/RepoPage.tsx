@@ -63,7 +63,7 @@ function useCanonicalAddress(requested: string, fullName: string | null) {
     if (fullName !== null && fullName !== requested) {
       void navigate(
         { pathname: `/repo/${fullName}`, search, hash },
-        { replace: true, state },
+        { replace: true, state, preventScrollReset: true },
       );
     }
   }, [requested, fullName, search, hash, state, navigate]);

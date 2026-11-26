@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet, ScrollRestoration } from 'react-router';
 import { ReturnTargetsContext } from '@/features/search/returnTargetsContext';
 import type { ReturnTargets } from '@/features/search/returnTargetsContext';
 import styles from './Layout.module.scss';
@@ -26,6 +26,7 @@ function Layout() {
           </ReturnTargetsContext>
         </div>
       </main>
+      <ScrollRestoration />
     </>
   );
 }

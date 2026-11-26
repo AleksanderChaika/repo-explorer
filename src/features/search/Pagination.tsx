@@ -34,6 +34,7 @@ function Pagination({ state, totalCount, onNavigate }: PaginationProps) {
           className={styles.previous}
           to={pageLink(current - 1)}
           onClick={handleClick}
+          preventScrollReset
         >
           Previous
         </Link>
@@ -44,6 +45,7 @@ function Pagination({ state, totalCount, onNavigate }: PaginationProps) {
           className={styles.next}
           to={pageLink(current + 1)}
           onClick={handleClick}
+          preventScrollReset
         >
           Next
         </Link>
