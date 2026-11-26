@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { parseReturnState } from './returnState';
+import type { FocusState } from './returnState';
 
 function BackToResults() {
   const location = useLocation();
@@ -9,8 +10,12 @@ function BackToResults() {
     return <Link to="/">Search repositories</Link>;
   }
 
+  const focusState: FocusState = { focusRepository: origin.repository };
+
   return (
-    <Link to={{ pathname: '/', search: origin.search }}>Back to results</Link>
+    <Link to={{ pathname: '/', search: origin.search }} state={focusState}>
+      Back to results
+    </Link>
   );
 }
 

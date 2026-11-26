@@ -13,9 +13,15 @@ export function useRouteFocus(containerRef: RefObject<HTMLElement | null>) {
     }
     previousPathname.current = pathname;
     if (navigationType !== NavigationType.Replace) {
-      containerRef.current
-        ?.querySelector('h1')
-        ?.focus({ preventScroll: navigationType === NavigationType.Pop });
+      const container = containerRef.current;
+      const card = container?.querySelector<HTMLElement>('[data-return-focus]');
+      if (card) {
+        card.focus();
+      } else {
+        container
+          ?.querySelector('h1')
+          ?.focus({ preventScroll: navigationType === NavigationType.Pop });
+      }
     }
   }, [pathname, navigationType, containerRef]);
 }
