@@ -1,6 +1,9 @@
 import { Link } from 'react-router';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 function NotFoundPage() {
+  useDocumentTitle('Page not found');
+
   return (
     <>
       <h1 tabIndex={-1}>Page not found</h1>

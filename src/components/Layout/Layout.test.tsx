@@ -1,7 +1,7 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw/http';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { repository } from '@/test/fixtures';
 import { server } from '@/test/server';
 import { renderWithProviders } from '@/test/utils';
@@ -19,10 +19,15 @@ async function followHomeLink() {
 }
 
 describe('Layout focus', () => {
+  beforeEach(() => {
+    document.title = '';
+  });
+
   it('moves focus to the heading after navigation, not on first open', async () => {
     renderWithProviders({ route: '/no/such/page' });
 
     expect(document.body).toHaveFocus();
+    expect(document.title).toBe('Page not found · repo-explorer');
 
     await followHomeLink();
   });
@@ -50,6 +55,7 @@ describe('Layout focus', () => {
     await screen.findByRole('article', { name: 'owner/vue' });
 
     expect(field).toHaveFocus();
+    expect(document.title).toBe('Search: vue · repo-explorer');
   });
 
   it('does not scroll to the heading on Back', async () => {

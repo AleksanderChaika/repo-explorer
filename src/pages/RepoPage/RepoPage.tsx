@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import LanguagesSection from '@/features/repository/LanguagesSection';
+import { NOT_FOUND_TITLE } from '@/features/repository/messages';
 import RepositoryAnnouncements from '@/features/repository/RepositoryAnnouncements';
 import RepositoryOverview from '@/features/repository/RepositoryOverview';
 import RepositoryProblem from '@/features/repository/RepositoryProblem';
@@ -9,6 +10,7 @@ import RepositorySkeleton from '@/features/repository/RepositorySkeleton';
 import { useRepository } from '@/features/repository/useRepository';
 import type { RepositoryState } from '@/features/repository/useRepository';
 import { useRepositoryLanguages } from '@/features/repository/useRepositoryLanguages';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import styles from './RepoPage.module.scss';
 
 interface ContentProps {
@@ -73,6 +75,9 @@ function RepoPage() {
     repository.kind === 'success' ? repository.repository.full_name : null;
   const languages = useRepositoryLanguages(fullName);
   useCanonicalAddress(`${owner}/${name}`, fullName);
+  useDocumentTitle(
+    repository.kind === 'not-found' ? NOT_FOUND_TITLE : `${owner}/${name}`,
+  );
   const headingRef = useRef<HTMLHeadingElement>(null);
   const languagesHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusHeading = useCallback(() => {
