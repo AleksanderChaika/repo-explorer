@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { repository, searchResponse } from './fixtures';
+import { repository, repositoryDetails, searchResponse } from './fixtures';
 
 describe('repository', () => {
   it('gives different names different ids', () => {
@@ -47,5 +47,24 @@ describe('searchResponse', () => {
 
   it('reports complete results', () => {
     expect(searchResponse('react').incomplete_results).toBe(false);
+  });
+});
+
+describe('repositoryDetails', () => {
+  it('gives every count a different value', () => {
+    const details = repositoryDetails();
+
+    const counts = [
+      details.stargazers_count,
+      details.forks_count,
+      details.subscribers_count,
+      details.open_issues_count,
+    ];
+
+    expect(new Set(counts).size).toBe(4);
+  });
+
+  it('allows an empty homepage', () => {
+    expect(repositoryDetails({ homepage: '' }).homepage).toBe('');
   });
 });
