@@ -99,7 +99,6 @@ src/
 - The repository's README on its page, sanitized with DOMPurify
 - Accessibility and test pass
 - Performance and Lighthouse
-- Own favicon instead of the Vite one
 
 ## Author
 
