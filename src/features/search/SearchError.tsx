@@ -1,7 +1,8 @@
 import type { ApiFailure } from '@/api/errors';
 import ErrorNotice from '@/components/ErrorNotice/ErrorNotice';
 import RateLimitNotice from '@/components/ErrorNotice/RateLimitNotice';
-import { describeError, RATE_LIMIT_TITLE } from './messages';
+import { RATE_LIMIT_TITLE } from '@/lib/errorMessages';
+import { describeError } from './messages';
 
 interface SearchErrorProps {
   error: ApiFailure;

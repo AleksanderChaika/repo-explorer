@@ -1,5 +1,7 @@
 import type { ApiFailure, RateLimitError } from '@/api/errors';
 import type { SearchRepositoriesResponse } from '@/api/types';
+import { describeRequestError, RATE_LIMIT_TITLE } from '@/lib/errorMessages';
+import type { ErrorDescription } from '@/lib/errorMessages';
 import { formatCount, formatTime } from '@/lib/format';
 import { lastPage, MAX_RESULTS, MIN_QUERY_LENGTH } from './searchParams';
 import type { RepositorySearch } from './useRepositorySearch';
@@ -8,13 +10,6 @@ export const INCOMPLETE_RESULTS_MESSAGE =
   'Some results may be missing because the search timed out.';
 
 export const SHORT_QUERY_MESSAGE = `Enter at least ${MIN_QUERY_LENGTH} characters to search.`;
-
-export const RATE_LIMIT_TITLE = 'Rate limit reached';
-
-export interface ErrorDescription {
-  title: string;
-  message: string;
-}
 
 export function formatSummary(totalCount: number): string {
   const noun = totalCount === 1 ? 'repository' : 'repositories';
@@ -27,35 +22,13 @@ export function formatSummary(totalCount: number): string {
 export function describeError(
   error: Exclude<ApiFailure, RateLimitError>,
 ): ErrorDescription {
-  switch (error.kind) {
-    case 'network':
-      return {
-        title: 'Connection problem',
-        message: "Couldn't reach GitHub. Check your connection and try again.",
-      };
-    case 'http':
-      if (error.status === 422) {
-        return {
-          title: 'Search query not accepted',
-          message:
-            "GitHub couldn't process this search. Try a different query.",
-        };
-      }
-      return {
-        title: 'Something went wrong',
-        message: `GitHub returned an error (status ${error.status}). Try again in a moment.`,
-      };
-    case 'parse':
-      return {
-        title: 'Unexpected response',
-        message: "GitHub sent a response we couldn't read. Try again.",
-      };
-    default: {
-      const unexpected: never = error;
-      void unexpected;
-      return { title: 'Something went wrong', message: 'Please try again.' };
-    }
+  if (error.kind === 'http' && error.status === 422) {
+    return {
+      title: 'Search query not accepted',
+      message: "GitHub couldn't process this search. Try a different query.",
+    };
   }
+  return describeRequestError(error);
 }
 
 function describeResults(
