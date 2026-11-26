@@ -10,6 +10,7 @@ import RepositorySkeleton from '@/features/repository/RepositorySkeleton';
 import { useRepository } from '@/features/repository/useRepository';
 import type { RepositoryState } from '@/features/repository/useRepository';
 import { useRepositoryLanguages } from '@/features/repository/useRepositoryLanguages';
+import BackToResults from '@/features/search/BackToResults';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import styles from './RepoPage.module.scss';
 
@@ -86,6 +87,9 @@ function RepoPage() {
 
   return (
     <div className={styles.root}>
+      <div>
+        <BackToResults />
+      </div>
       <h1 ref={headingRef} className={styles.heading} tabIndex={-1}>
         {owner}/{name}
       </h1>

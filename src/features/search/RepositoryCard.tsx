@@ -1,7 +1,9 @@
 import { useId } from 'react';
+import { Link, useLocation } from 'react-router';
 import type { Repository } from '@/api/types';
 import { avatarSrcSet, sizedAvatarUrl } from '@/lib/avatar';
 import { formatCount, formatDate } from '@/lib/format';
+import type { ReturnState } from './returnState';
 import styles from './RepositoryCard.module.scss';
 
 const AVATAR_SIZE = 20;
@@ -12,20 +14,21 @@ interface RepositoryCardProps {
 
 function RepositoryCard({ repository }: RepositoryCardProps) {
   const titleId = useId();
+  const { search } = useLocation();
+  const returnState: ReturnState = { search, repository: repository.full_name };
   const updated = formatDate(repository.updated_at);
 
   return (
     <article className={styles.card} aria-labelledby={titleId}>
       <h3 className={styles.title}>
-        <a
+        <Link
+          id={titleId}
           className={styles.link}
-          href={repository.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
+          to={`/repo/${repository.full_name}`}
+          state={returnState}
         >
-          <span id={titleId}>{repository.full_name}</span>{' '}
-          <span className={styles.hidden}>(opens in new tab)</span>
-        </a>
+          {repository.full_name}
+        </Link>
       </h3>
       <p className={styles.description}>
         {repository.description || 'No description'}

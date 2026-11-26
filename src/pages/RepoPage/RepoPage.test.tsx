@@ -79,6 +79,9 @@ describe('RepoPage', () => {
     expect(pageHeading('owner/react')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Repository loaded');
     expect(screen.getByRole('alert')).toBeEmptyDOMElement();
+    expect(
+      screen.getByRole('link', { name: 'View on GitHub (opens in new tab)' }),
+    ).toBeInTheDocument();
   });
 
   it('keeps the heading and announces a missing repository', async () => {

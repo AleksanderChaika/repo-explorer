@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { repository } from '@/test/fixtures';
 import RepositoryCard from './RepositoryCard';
@@ -15,6 +16,7 @@ function renderCard(overrides: Parameters<typeof repository>[1] = {}) {
         ...overrides,
       })}
     />,
+    { wrapper: MemoryRouter },
   );
 }
 
@@ -43,25 +45,8 @@ describe('RepositoryCard', () => {
 
     expect(screen.getByRole('link')).toHaveAttribute(
       'href',
-      'https://github.com/owner/react',
+      '/repo/owner/react',
     );
-  });
-
-  it('opens the link in a new tab safely', () => {
-    renderCard();
-
-    const link = screen.getByRole('link');
-
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-  });
-
-  it('announces that the link opens in a new tab', () => {
-    renderCard();
-
-    expect(
-      screen.getByRole('link', { name: 'owner/react (opens in new tab)' }),
-    ).toBeInTheDocument();
   });
 
   it('shows the description', () => {
