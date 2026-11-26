@@ -1,5 +1,5 @@
-import { formatRemaining, formatTime } from './format';
-import { useCountdown } from './useCountdown';
+import { formatRemaining, formatTime } from '@/lib/format';
+import { useCountdown } from '@/lib/useCountdown';
 import styles from './RateLimitBlocked.module.scss';
 
 interface RateLimitBlockedProps {

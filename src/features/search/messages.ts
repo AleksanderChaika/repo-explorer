@@ -1,6 +1,6 @@
 import type { ApiFailure, RateLimitError } from '@/api/errors';
 import type { SearchRepositoriesResponse } from '@/api/types';
-import { formatCount, formatTime } from './format';
+import { formatCount, formatTime } from '@/lib/format';
 import { lastPage, MAX_RESULTS, MIN_QUERY_LENGTH } from './searchParams';
 import type { RepositorySearch } from './useRepositorySearch';
 

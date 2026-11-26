@@ -1,23 +1,10 @@
 import { useId } from 'react';
 import type { Repository } from '@/api/types';
-import { formatCount, formatDate } from './format';
+import { avatarSrcSet, sizedAvatarUrl } from '@/lib/avatar';
+import { formatCount, formatDate } from '@/lib/format';
 import styles from './RepositoryCard.module.scss';
 
 const AVATAR_SIZE = 20;
-const AVATAR_DENSITIES = [1, 2, 3];
-
-function sizedAvatarUrl(avatarUrl: string, size: number): string {
-  const url = new URL(avatarUrl);
-  url.searchParams.set('s', String(size));
-  return url.toString();
-}
-
-function avatarSrcSet(avatarUrl: string): string {
-  return AVATAR_DENSITIES.map(
-    (density) =>
-      `${sizedAvatarUrl(avatarUrl, AVATAR_SIZE * density)} ${density}x`,
-  ).join(', ');
-}
 
 interface RepositoryCardProps {
   repository: Repository;
@@ -49,7 +36,7 @@ function RepositoryCard({ repository }: RepositoryCardProps) {
             <img
               className={styles.avatar}
               src={sizedAvatarUrl(repository.owner.avatar_url, AVATAR_SIZE)}
-              srcSet={avatarSrcSet(repository.owner.avatar_url)}
+              srcSet={avatarSrcSet(repository.owner.avatar_url, AVATAR_SIZE)}
               alt=""
               loading="lazy"
               width={AVATAR_SIZE}

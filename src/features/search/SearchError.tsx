@@ -1,7 +1,7 @@
 import type { ApiFailure } from '@/api/errors';
-import { formatRemaining, formatTime } from './format';
+import { formatRemaining, formatTime } from '@/lib/format';
+import { useCountdown } from '@/lib/useCountdown';
 import { describeError, RATE_LIMIT_TITLE } from './messages';
-import { useCountdown } from './useCountdown';
 import styles from './SearchError.module.scss';
 
 interface SearchErrorProps {
