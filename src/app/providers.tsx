@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { createQueryClient } from '@/api/queryClient';
-import RateLimitGateProvider from '@/features/search/RateLimitGateProvider';
+import RateLimitGateProvider from '@/features/rateLimit/RateLimitGateProvider';
 
 const queryClient = createQueryClient();
 

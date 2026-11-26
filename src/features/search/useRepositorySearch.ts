@@ -7,7 +7,7 @@ import type { SearchRepositoriesResponse } from '@/api/types';
 import {
   useRateLimitBlockedUntil,
   useRateLimitGate,
-} from './rateLimitGateContext';
+} from '@/features/rateLimit/rateLimitGateContext';
 import { MIN_QUERY_LENGTH, PER_PAGE } from './searchParams';
 import type { SearchState } from './searchParams';
 
@@ -29,8 +29,8 @@ export function useRepositorySearch({
   order,
   page,
 }: SearchState): RepositorySearch {
-  const gate = useRateLimitGate();
-  const blockedUntil = useRateLimitBlockedUntil();
+  const gate = useRateLimitGate('search');
+  const blockedUntil = useRateLimitBlockedUntil('search');
   const isLongEnough = q.length >= MIN_QUERY_LENGTH;
 
   const query = useQuery<SearchRepositoriesResponse, ApiFailure>({

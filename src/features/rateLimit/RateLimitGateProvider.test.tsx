@@ -9,23 +9,38 @@ import {
   useRateLimitBlockedUntil,
   useRateLimitGate,
 } from './rateLimitGateContext';
+import type { RateLimitResource } from './rateLimitGateContext';
 
 const NOW = Date.UTC(2026, 10, 24, 10, 0, 0);
+
+const RESOURCES: RateLimitResource[] = ['search', 'core'];
 
 function wrapperFor(gate: RateLimitGate) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <RateLimitGateProvider gate={gate}>{children}</RateLimitGateProvider>
+      <RateLimitGateProvider gates={{ search: gate }}>
+        {children}
+      </RateLimitGateProvider>
     );
   };
 }
 
 function BlockedUntil({ testId }: { testId: string }) {
-  return <span data-testid={testId}>{String(useRateLimitBlockedUntil())}</span>;
+  return (
+    <span data-testid={testId}>
+      {String(useRateLimitBlockedUntil('search'))}
+    </span>
+  );
 }
 
-function GateCollector({ seen }: { seen: RateLimitGate[] }) {
-  const gate = useRateLimitGate();
+function GateCollector({
+  seen,
+  resource = 'search',
+}: {
+  seen: RateLimitGate[];
+  resource?: RateLimitResource;
+}) {
+  const gate = useRateLimitGate(resource);
   useEffect(() => {
     seen.push(gate);
   });
@@ -43,32 +58,79 @@ describe('RateLimitGateProvider', () => {
     vi.useRealTimers();
   });
 
-  it('exposes the gate it is given', () => {
+  it.each(RESOURCES)('exposes the %s gate it is given', (resource) => {
     const gate = createRateLimitGate();
 
-    const { result } = renderHook(() => useRateLimitGate(), {
-      wrapper: wrapperFor(gate),
+    const { result } = renderHook(() => useRateLimitGate(resource), {
+      wrapper: ({ children }) => (
+        <RateLimitGateProvider gates={{ [resource]: gate }}>
+          {children}
+        </RateLimitGateProvider>
+      ),
     });
 
     expect(result.current).toBe(gate);
   });
 
-  it('keeps the same own gate across re-renders', () => {
-    const seen: RateLimitGate[] = [];
-    const { rerender } = render(
-      <RateLimitGateProvider>
-        <GateCollector seen={seen} />
-      </RateLimitGateProvider>,
+  it.each(RESOURCES)(
+    'keeps the same own %s gate across re-renders',
+    (resource) => {
+      const seen: RateLimitGate[] = [];
+      const renderUi = () => (
+        <RateLimitGateProvider>
+          <GateCollector seen={seen} resource={resource} />
+        </RateLimitGateProvider>
+      );
+      const { rerender } = render(renderUi());
+
+      rerender(renderUi());
+      rerender(renderUi());
+
+      expect(seen.length).toBeGreaterThan(2);
+      expect(new Set(seen).size).toBe(1);
+    },
+  );
+
+  it('uses its own core gate when only a search gate is given', () => {
+    const injected = createRateLimitGate();
+
+    const { result } = renderHook(
+      () => ({
+        search: useRateLimitGate('search'),
+        core: useRateLimitGate('core'),
+      }),
+      {
+        wrapper: ({ children }) => (
+          <RateLimitGateProvider gates={{ search: injected }}>
+            {children}
+          </RateLimitGateProvider>
+        ),
+      },
     );
 
-    rerender(
-      <RateLimitGateProvider>
-        <GateCollector seen={seen} />
-      </RateLimitGateProvider>,
+    expect(result.current.search).toBe(injected);
+    expect(result.current.core).not.toBe(injected);
+  });
+
+  it.each([
+    ['search', 'core'],
+    ['core', 'search'],
+  ] as const)('blocks only %s, not %s', (blocked, other) => {
+    const { result } = renderHook(
+      () => ({
+        gate: useRateLimitGate(blocked),
+        blocked: useRateLimitBlockedUntil(blocked),
+        other: useRateLimitBlockedUntil(other),
+      }),
+      { wrapper: RateLimitGateProvider },
     );
 
-    expect(seen.length).toBeGreaterThan(1);
-    expect(new Set(seen).size).toBe(1);
+    act(() => {
+      result.current.gate.report(new Date(NOW + 5000));
+    });
+
+    expect(result.current.blocked).toBe(NOW + 5000);
+    expect(result.current.other).toBeNull();
   });
 
   it('gives separate providers separate gates', () => {
@@ -91,7 +153,7 @@ describe('RateLimitGateProvider', () => {
   it('throws a clear error when used outside the provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    expect(() => renderHook(() => useRateLimitGate())).toThrow(
+    expect(() => renderHook(() => useRateLimitGate('search'))).toThrow(
       'useRateLimitGate must be used within a RateLimitGateProvider',
     );
   });
@@ -110,7 +172,7 @@ describe('useRateLimitBlockedUntil', () => {
   it('is null while nothing is blocked', () => {
     const gate = createRateLimitGate();
 
-    const { result } = renderHook(() => useRateLimitBlockedUntil(), {
+    const { result } = renderHook(() => useRateLimitBlockedUntil('search'), {
       wrapper: wrapperFor(gate),
     });
 
@@ -119,7 +181,7 @@ describe('useRateLimitBlockedUntil', () => {
 
   it('follows the gate when it blocks and when the block expires', () => {
     const gate = createRateLimitGate();
-    const { result } = renderHook(() => useRateLimitBlockedUntil(), {
+    const { result } = renderHook(() => useRateLimitBlockedUntil('search'), {
       wrapper: wrapperFor(gate),
     });
 

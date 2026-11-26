@@ -23,9 +23,7 @@
   border-radius: var(--radius-sm);
   background-color: var(--color-surface);
 
-  @media (prefers-reduced-motion: no-preference) {
-    animation: pulse 1.5s ease-in-out infinite;
-  }
+  @include skeleton-pulse;
 }
 
 .title {
@@ -39,10 +37,4 @@
 
 .meta {
   width: 40%;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.5;
-  }
 }

@@ -1,8 +1,15 @@
-import { act, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw/http';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { server } from '@/test/server';
 import { renderWithProviders } from '@/test/utils';
 
 describe('routes', () => {
+  beforeEach(() => {
+    document.title = '';
+  });
+
   it('renders the home page inside the layout', async () => {
     renderWithProviders();
 
@@ -68,5 +75,24 @@ describe('routes', () => {
     expect(
       within(main).getByRole('link', { name: 'Go to the home page' }),
     ).toHaveAttribute('href', '/');
+  });
+
+  it('names each page in the document title', async () => {
+    server.use(
+      http.get('https://api.github.com/repos/:owner/:name', () =>
+        HttpResponse.json({ message: 'Not Found' }, { status: 404 }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderWithProviders({ route: '/repo/owner/missing' });
+
+    expect(document.title).toBe('owner/missing · repo-explorer');
+    await waitFor(() =>
+      expect(document.title).toBe('Repository not found · repo-explorer'),
+    );
+
+    await user.click(screen.getByRole('link', { name: 'repo-explorer' }));
+
+    await waitFor(() => expect(document.title).toBe('repo-explorer'));
   });
 });

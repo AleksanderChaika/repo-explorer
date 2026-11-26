@@ -34,7 +34,7 @@ export function useSearchState() {
         return;
       }
       latestSearch.current = next;
-      void navigate({ search: next }, options);
+      void navigate({ search: next }, { ...options, preventScrollReset: true });
     },
     [navigate],
   );

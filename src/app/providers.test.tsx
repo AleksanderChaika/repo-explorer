@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
 import { shouldRetry } from '@/api/queryClient';
-import type { RateLimitGate } from '@/features/search/rateLimitGate';
-import { useRateLimitGate } from '@/features/search/rateLimitGateContext';
+import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
+import { useRateLimitGate } from '@/features/rateLimit/rateLimitGateContext';
 import Providers from './providers';
 
 function Probe() {
@@ -21,7 +21,7 @@ function Probe() {
 }
 
 function GateProbe({ onGate }: { onGate: (gate: RateLimitGate) => void }) {
-  const gate = useRateLimitGate();
+  const gate = useRateLimitGate('search');
   useEffect(() => {
     onGate(gate);
   });

@@ -1,7 +1,11 @@
 @use '@/styles/mixins' as *;
 
-.root {
+.danger {
   @include notice(1px solid var(--color-danger));
+}
+
+.neutral {
+  @include notice(1px solid var(--color-border-strong));
 }
 
 .title {
@@ -9,8 +13,12 @@
 }
 
 .message {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   color: var(--color-text-muted);
+}
+
+.withAction {
+  margin-bottom: var(--space-4);
 }
 
 .retry {

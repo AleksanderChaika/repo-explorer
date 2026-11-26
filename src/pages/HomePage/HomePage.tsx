@@ -13,6 +13,7 @@ import type { SearchState } from '@/features/search/searchParams';
 import { useRepositorySearch } from '@/features/search/useRepositorySearch';
 import type { RepositorySearch } from '@/features/search/useRepositorySearch';
 import { useSearchState } from '@/features/search/useSearchState';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import styles from './HomePage.module.scss';
 
 interface ResultsProps {
@@ -101,6 +102,7 @@ function pageToClamp(search: RepositorySearch, page: number): number | null {
 function HomePage() {
   const { state, setQuery, setSort, setOrder, clampPage } = useSearchState();
   const search = useRepositorySearch(state);
+  useDocumentTitle(state.q === '' ? null : `Search: ${state.q}`);
   const resultsRef = useRef<HTMLElement>(null);
   const focusResults = useCallback(() => {
     resultsRef.current?.focus();
@@ -120,7 +122,7 @@ function HomePage() {
 
   return (
     <>
-      <h1>Explore GitHub repositories</h1>
+      <h1 tabIndex={-1}>Explore GitHub repositories</h1>
       <p>
         Search public GitHub repositories, sort the results and page through
         them.

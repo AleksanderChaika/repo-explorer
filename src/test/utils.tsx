@@ -8,8 +8,8 @@ import type { LoaderFunction } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { onTestFinished, vi } from 'vitest';
 import { routes } from '@/app/routes';
-import type { RateLimitGate } from '@/features/search/rateLimitGate';
-import { createRateLimitGate } from '@/features/search/rateLimitGate';
+import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
+import { createRateLimitGate } from '@/features/rateLimit/rateLimitGate';
 import TestProviders from './TestProviders';
 
 function createTestQueryClient() {
@@ -35,18 +35,20 @@ interface RenderWithProvidersOptions {
   route?: string;
   initialEntries?: string[];
   gate?: RateLimitGate;
+  coreGate?: RateLimitGate;
 }
 
 export function renderWithProviders({
   route = '/',
   initialEntries = [route],
   gate = createRateLimitGate(),
+  coreGate = createRateLimitGate(),
 }: RenderWithProvidersOptions = {}) {
   const queryClient = createTestQueryClient();
   const router = createMemoryRouter(routes, { initialEntries });
 
   const view = render(
-    <TestProviders queryClient={queryClient} gate={gate}>
+    <TestProviders queryClient={queryClient} gate={gate} coreGate={coreGate}>
       <RouterProvider router={router} />
     </TestProviders>,
   );
@@ -56,6 +58,7 @@ export function renderWithProviders({
 
 interface RenderHookWithProvidersOptions<Props> {
   gate?: RateLimitGate;
+  coreGate?: RateLimitGate;
   initialProps?: Props;
 }
 
@@ -63,6 +66,7 @@ export function renderHookWithProviders<Result, Props = undefined>(
   callback: (props: Props) => Result,
   {
     gate = createRateLimitGate(),
+    coreGate = createRateLimitGate(),
     initialProps,
   }: RenderHookWithProvidersOptions<Props> = {},
 ) {
@@ -70,7 +74,7 @@ export function renderHookWithProviders<Result, Props = undefined>(
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <TestProviders queryClient={queryClient} gate={gate}>
+      <TestProviders queryClient={queryClient} gate={gate} coreGate={coreGate}>
         {children}
       </TestProviders>
     );
@@ -78,7 +82,7 @@ export function renderHookWithProviders<Result, Props = undefined>(
 
   const view = renderHook(callback, { initialProps, wrapper: Wrapper });
 
-  return { ...view, queryClient, gate };
+  return { ...view, queryClient, gate, coreGate };
 }
 
 interface RenderHookWithRouterOptions<
@@ -93,6 +97,7 @@ export function renderHookWithRouter<Result, Props = undefined>(
   callback: (props: Props) => Result,
   {
     gate = createRateLimitGate(),
+    coreGate = createRateLimitGate(),
     initialProps,
     initialEntries = ['/'],
     initialIndex,
@@ -117,7 +122,7 @@ export function renderHookWithRouter<Result, Props = undefined>(
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <TestProviders queryClient={queryClient} gate={gate}>
+      <TestProviders queryClient={queryClient} gate={gate} coreGate={coreGate}>
         <HookChildrenContext.Provider value={children}>
           <RouterProvider router={router} />
         </HookChildrenContext.Provider>
@@ -127,5 +132,5 @@ export function renderHookWithRouter<Result, Props = undefined>(
 
   const view = renderHook(callback, { initialProps, wrapper: Wrapper });
 
-  return { ...view, queryClient, gate, router };
+  return { ...view, queryClient, gate, coreGate, router };
 }

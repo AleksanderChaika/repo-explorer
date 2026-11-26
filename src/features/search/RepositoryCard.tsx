@@ -1,23 +1,15 @@
-import { useId } from 'react';
+import { useContext, useId } from 'react';
+import type { MouseEvent } from 'react';
+import { Link, useLocation } from 'react-router';
 import type { Repository } from '@/api/types';
-import { formatCount, formatDate } from './format';
+import { avatarSrcSet, sizedAvatarUrl } from '@/lib/avatar';
+import { formatCount, formatDate } from '@/lib/format';
+import { parseFocusRepository } from './returnState';
+import type { ReturnState } from './returnState';
+import { ReturnTargetsContext } from './returnTargetsContext';
 import styles from './RepositoryCard.module.scss';
 
 const AVATAR_SIZE = 20;
-const AVATAR_DENSITIES = [1, 2, 3];
-
-function sizedAvatarUrl(avatarUrl: string, size: number): string {
-  const url = new URL(avatarUrl);
-  url.searchParams.set('s', String(size));
-  return url.toString();
-}
-
-function avatarSrcSet(avatarUrl: string): string {
-  return AVATAR_DENSITIES.map(
-    (density) =>
-      `${sizedAvatarUrl(avatarUrl, AVATAR_SIZE * density)} ${density}x`,
-  ).join(', ');
-}
 
 interface RepositoryCardProps {
   repository: Repository;
@@ -25,20 +17,36 @@ interface RepositoryCardProps {
 
 function RepositoryCard({ repository }: RepositoryCardProps) {
   const titleId = useId();
+  const location = useLocation();
+  const returnTargets = useContext(ReturnTargetsContext);
+  const returnState: ReturnState = {
+    search: location.search,
+    repository: repository.full_name,
+  };
+  const isReturnTarget =
+    (returnTargets?.get(location.key) ??
+      parseFocusRepository(location.state)) === repository.full_name;
   const updated = formatDate(repository.updated_at);
+
+  function rememberCard(event: MouseEvent) {
+    if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+      returnTargets?.set(location.key, repository.full_name);
+    }
+  }
 
   return (
     <article className={styles.card} aria-labelledby={titleId}>
       <h3 className={styles.title}>
-        <a
+        <Link
+          id={titleId}
           className={styles.link}
-          href={repository.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
+          to={`/repo/${repository.full_name}`}
+          state={returnState}
+          onClick={rememberCard}
+          data-return-focus={isReturnTarget ? '' : undefined}
         >
-          <span id={titleId}>{repository.full_name}</span>{' '}
-          <span className={styles.hidden}>(opens in new tab)</span>
-        </a>
+          {repository.full_name}
+        </Link>
       </h3>
       <p className={styles.description}>
         {repository.description || 'No description'}
@@ -49,7 +57,7 @@ function RepositoryCard({ repository }: RepositoryCardProps) {
             <img
               className={styles.avatar}
               src={sizedAvatarUrl(repository.owner.avatar_url, AVATAR_SIZE)}
-              srcSet={avatarSrcSet(repository.owner.avatar_url)}
+              srcSet={avatarSrcSet(repository.owner.avatar_url, AVATAR_SIZE)}
               alt=""
               loading="lazy"
               width={AVATAR_SIZE}
