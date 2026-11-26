@@ -178,6 +178,7 @@ describe('RepoPage', () => {
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/repo/owner/react');
     expect(router.state.historyAction).toBe('REPLACE');
+    expect(document.body).toHaveFocus();
   });
 
   describe('when a block ends', () => {

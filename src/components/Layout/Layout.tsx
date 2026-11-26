@@ -1,7 +1,12 @@
+import { useRef } from 'react';
 import { Link, Outlet } from 'react-router';
 import styles from './Layout.module.scss';
+import { useRouteFocus } from './useRouteFocus';
 
 function Layout() {
+  const mainRef = useRef<HTMLElement>(null);
+  useRouteFocus(mainRef);
+
   return (
     <>
       <header className={styles.header}>
@@ -11,7 +16,7 @@ function Layout() {
           </Link>
         </div>
       </header>
-      <main className={styles.main}>
+      <main ref={mainRef} className={styles.main}>
         <div className={styles.container}>
           <Outlet />
         </div>
