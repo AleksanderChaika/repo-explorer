@@ -169,6 +169,17 @@ describe('RepoPage', () => {
     );
   });
 
+  it('replaces the address with the canonical one', async () => {
+    handleRepository(found);
+    const { router } = renderWithProviders({ route: '/repo/Owner/React' });
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'owner/react' }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/repo/owner/react');
+    expect(router.state.historyAction).toBe('REPLACE');
+  });
+
   describe('when a block ends', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });

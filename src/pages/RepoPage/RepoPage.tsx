@@ -1,6 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import LanguagesSection from '@/features/repository/LanguagesSection';
 import RepositoryAnnouncements from '@/features/repository/RepositoryAnnouncements';
 import RepositoryOverview from '@/features/repository/RepositoryOverview';
@@ -50,12 +50,29 @@ function Content({ state, focusHeading, children }: ContentProps) {
   }
 }
 
+function useCanonicalAddress(requested: string, fullName: string | null) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { search, hash } = location;
+  const state: unknown = location.state;
+
+  useEffect(() => {
+    if (fullName !== null && fullName !== requested) {
+      void navigate(
+        { pathname: `/repo/${fullName}`, search, hash },
+        { replace: true, state },
+      );
+    }
+  }, [requested, fullName, search, hash, state, navigate]);
+}
+
 function RepoPage() {
   const { owner = '', name = '' } = useParams();
   const repository = useRepository(owner, name);
-  const languages = useRepositoryLanguages(
-    repository.kind === 'success' ? repository.repository.full_name : null,
-  );
+  const fullName =
+    repository.kind === 'success' ? repository.repository.full_name : null;
+  const languages = useRepositoryLanguages(fullName);
+  useCanonicalAddress(`${owner}/${name}`, fullName);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const languagesHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusHeading = useCallback(() => {
