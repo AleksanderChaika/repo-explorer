@@ -124,8 +124,8 @@ function HomePage() {
     <>
       <h1 tabIndex={-1}>Explore GitHub repositories</h1>
       <p>
-        Search public GitHub repositories, sort the results and page through
-        them.
+        Search public GitHub repositories and see the details and languages of
+        each one.
       </p>
       <SearchForm
         state={state}
