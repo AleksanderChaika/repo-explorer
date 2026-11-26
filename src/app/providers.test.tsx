@@ -21,7 +21,7 @@ function Probe() {
 }
 
 function GateProbe({ onGate }: { onGate: (gate: RateLimitGate) => void }) {
-  const gate = useRateLimitGate();
+  const gate = useRateLimitGate('search');
   useEffect(() => {
     onGate(gate);
   });

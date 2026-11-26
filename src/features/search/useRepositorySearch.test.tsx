@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw/http';
 import { delay } from 'msw/utils/delay';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitError } from '@/api/errors';
+import { createRateLimitGate } from '@/features/rateLimit/rateLimitGate';
 import { searchResponse } from '@/test/fixtures';
 import { server } from '@/test/server';
 import { renderHookWithProviders } from '@/test/utils';
@@ -299,6 +300,19 @@ describe('useRepositorySearch', () => {
         blockedUntil: gate.getSnapshot(),
       });
       expect(requests.count).toBe(1);
+    });
+
+    it('is not blocked by the core rate limit', async () => {
+      handleSearch();
+      const coreGate = createRateLimitGate();
+      coreGate.report(new Date(Date.now() + 60_000));
+
+      const { result } = renderHookWithProviders(useRepositorySearch, {
+        initialProps: searchState(),
+        coreGate,
+      });
+
+      await waitFor(() => expect(kindOf(result.current)).toBe('success'));
     });
 
     it('ignores refetch while the gate is blocked', async () => {

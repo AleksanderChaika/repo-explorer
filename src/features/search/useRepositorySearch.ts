@@ -29,8 +29,8 @@ export function useRepositorySearch({
   order,
   page,
 }: SearchState): RepositorySearch {
-  const gate = useRateLimitGate();
-  const blockedUntil = useRateLimitBlockedUntil();
+  const gate = useRateLimitGate('search');
+  const blockedUntil = useRateLimitBlockedUntil('search');
   const isLongEnough = q.length >= MIN_QUERY_LENGTH;
 
   const query = useQuery<SearchRepositoriesResponse, ApiFailure>({

@@ -11,7 +11,11 @@ import {
 } from './utils';
 
 function useProviders() {
-  return { queryClient: useQueryClient(), gate: useRateLimitGate() };
+  return {
+    queryClient: useQueryClient(),
+    gate: useRateLimitGate('search'),
+    coreGate: useRateLimitGate('core'),
+  };
 }
 
 describe('renderHookWithProviders', () => {
@@ -33,12 +37,25 @@ describe('renderHookWithProviders', () => {
     expect(result.current.gate).toBe(gate);
   });
 
+  it('uses the core gate passed in options', () => {
+    const coreGate = createRateLimitGate();
+
+    const { result, coreGate: returned } = renderHookWithProviders(
+      useProviders,
+      { coreGate },
+    );
+
+    expect(returned).toBe(coreGate);
+    expect(result.current.coreGate).toBe(coreGate);
+  });
+
   it('creates a separate query client and gate for every call', () => {
     const first = renderHookWithProviders(useProviders);
     const second = renderHookWithProviders(useProviders);
 
     expect(second.queryClient).not.toBe(first.queryClient);
     expect(second.gate).not.toBe(first.gate);
+    expect(second.coreGate).not.toBe(first.coreGate);
   });
 
   it('turns query retries off', () => {
@@ -126,6 +143,17 @@ describe('renderHookWithRouter', () => {
     const { result, queryClient } = renderHookWithRouter(useProviders);
 
     expect(result.current.queryClient).toBe(queryClient);
+  });
+
+  it('uses the core gate passed in options', () => {
+    const coreGate = createRateLimitGate();
+
+    const { result, coreGate: returned } = renderHookWithRouter(useProviders, {
+      coreGate,
+    });
+
+    expect(returned).toBe(coreGate);
+    expect(result.current.coreGate).toBe(coreGate);
   });
 
   it('gives the hook the gate that it returns', () => {

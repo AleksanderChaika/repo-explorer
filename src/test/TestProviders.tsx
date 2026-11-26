@@ -7,13 +7,21 @@ import type { RateLimitGate } from '@/features/rateLimit/rateLimitGate';
 interface TestProvidersProps {
   queryClient: QueryClient;
   gate: RateLimitGate;
+  coreGate: RateLimitGate;
   children: ReactNode;
 }
 
-function TestProviders({ queryClient, gate, children }: TestProvidersProps) {
+function TestProviders({
+  queryClient,
+  gate,
+  coreGate,
+  children,
+}: TestProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <RateLimitGateProvider gate={gate}>{children}</RateLimitGateProvider>
+      <RateLimitGateProvider gates={{ search: gate, core: coreGate }}>
+        {children}
+      </RateLimitGateProvider>
     </QueryClientProvider>
   );
 }

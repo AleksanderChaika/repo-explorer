@@ -1,19 +1,25 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { RateLimitGate } from './rateLimitGate';
 
-export const RateLimitGateContext = createContext<RateLimitGate | null>(null);
+export type RateLimitResource = 'search' | 'core';
 
-export function useRateLimitGate(): RateLimitGate {
-  const gate = useContext(RateLimitGateContext);
-  if (gate === null) {
+export type RateLimitGates = Record<RateLimitResource, RateLimitGate>;
+
+export const RateLimitGateContext = createContext<RateLimitGates | null>(null);
+
+export function useRateLimitGate(resource: RateLimitResource): RateLimitGate {
+  const gates = useContext(RateLimitGateContext);
+  if (gates === null) {
     throw new Error(
       'useRateLimitGate must be used within a RateLimitGateProvider',
     );
   }
-  return gate;
+  return gates[resource];
 }
 
-export function useRateLimitBlockedUntil(): number | null {
-  const gate = useRateLimitGate();
+export function useRateLimitBlockedUntil(
+  resource: RateLimitResource,
+): number | null {
+  const gate = useRateLimitGate(resource);
   return useSyncExternalStore(gate.subscribe, gate.getSnapshot);
 }
