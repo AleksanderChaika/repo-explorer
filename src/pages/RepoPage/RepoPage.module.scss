@@ -1,0 +1,13 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heading {
+  overflow-wrap: anywhere;
+}
+
+.loading {
+  color: var(--color-text-muted);
+}

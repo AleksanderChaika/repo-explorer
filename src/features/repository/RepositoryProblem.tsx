@@ -1,5 +1,6 @@
 import ErrorNotice from '@/components/ErrorNotice/ErrorNotice';
 import RateLimitNotice from '@/components/ErrorNotice/RateLimitNotice';
+import { NOT_FOUND_MESSAGE, NOT_FOUND_TITLE } from './messages';
 import RequestErrorNotice from './RequestErrorNotice';
 import type { RepositoryState } from './useRepository';
 
@@ -13,8 +14,8 @@ function RepositoryProblem({ state, onRetry }: RepositoryProblemProps) {
     case 'not-found':
       return (
         <ErrorNotice
-          title="Repository not found"
-          message="There is no public repository at this address. Check the owner and name."
+          title={NOT_FOUND_TITLE}
+          message={NOT_FOUND_MESSAGE}
           tone="neutral"
         />
       );
